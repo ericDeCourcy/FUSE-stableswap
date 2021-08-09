@@ -1,0 +1,6 @@
+secrets*.json
+notes/*
+node_modules/*
+cache/*
+yarn-error.log
+contracts_truffle/*

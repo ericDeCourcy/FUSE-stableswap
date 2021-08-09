@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BadBeaconNotContractUpgradeable",
+  "sourceName": "contracts/contracts-upgradeable-v3_4/mocks/BadBeaconUpgradeable.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "implementation",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80635c60da1b14602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60019056fea26469706673582212202b051b52141b51e4e35b316c6b3fde878f950807fdff5854f2d7a9b733dba91764736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c80635c60da1b14602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60019056fea26469706673582212202b051b52141b51e4e35b316c6b3fde878f950807fdff5854f2d7a9b733dba91764736f6c634300060c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

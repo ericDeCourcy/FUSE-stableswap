@@ -1,0 +1,321 @@
+{
+  "id": "ad92ed1c2e19e3edf2ea0fa4b2ac482a",
+  "_format": "hh-sol-build-info-1",
+  "solcVersion": "0.6.12",
+  "solcLongVersion": "0.6.12+commit.27d51765",
+  "input": {
+    "language": "Solidity",
+    "sources": {
+      "contracts/contracts-v3_4/mocks/ClashingImplementation.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n\npragma solidity >=0.6.0 <0.8.0;\n\n\n/**\n * @dev Implementation contract with an admin() function made to clash with\n * @dev TransparentUpgradeableProxy's to test correct functioning of the\n * @dev Transparent Proxy feature.\n */\ncontract ClashingImplementation {\n\n  function admin() external pure returns (address) {\n    return 0x0000000000000000000000000000000011111142;\n  }\n\n  function delegatedFunction() external pure returns (bool) {\n    return true;\n  }\n}\n"
+      }
+    },
+    "settings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    }
+  },
+  "output": {
+    "contracts": {
+      "contracts/contracts-v3_4/mocks/ClashingImplementation.sol": {
+        "ClashingImplementation": {
+          "abi": [
+            {
+              "inputs": [],
+              "name": "admin",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "pure",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "delegatedFunction",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "pure",
+              "type": "function"
+            }
+          ],
+          "evm": {
+            "bytecode": {
+              "linkReferences": {},
+              "object": "608060405234801561001057600080fd5b5060b68061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063abf8e0e7146037578063f851a440146051575b600080fd5b603d6073565b604080519115158252519081900360200190f35b60576078565b604080516001600160a01b039092168252519081900360200190f35b600190565b63111111429056fea26469706673582212206764bdb65af1923b7c2212329e0b5145e322d9834b7700ef3cd8e80c9a459d2c64736f6c634300060c0033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH2 0x10 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0xB6 DUP1 PUSH2 0x1F PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN INVALID PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH1 0x32 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0xABF8E0E7 EQ PUSH1 0x37 JUMPI DUP1 PUSH4 0xF851A440 EQ PUSH1 0x51 JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH1 0x3D PUSH1 0x73 JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD SWAP2 ISZERO ISZERO DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH1 0x57 PUSH1 0x78 JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB SWAP1 SWAP3 AND DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH1 0x1 SWAP1 JUMP JUMPDEST PUSH4 0x11111142 SWAP1 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH8 0x64BDB65AF1923B7C 0x22 SLT ORIGIN SWAP15 SIGNEXTEND MLOAD GASLIMIT 0xE3 0x22 0xD9 DUP4 0x4B PUSH24 0xEF3CD8E80C9A459D2C64736F6C634300060C0033000000 ",
+              "sourceMap": "259:232:0:-:0;;;;;;;;;;;;;;;;;;;"
+            },
+            "deployedBytecode": {
+              "immutableReferences": {},
+              "linkReferences": {},
+              "object": "6080604052348015600f57600080fd5b506004361060325760003560e01c8063abf8e0e7146037578063f851a440146051575b600080fd5b603d6073565b604080519115158252519081900360200190f35b60576078565b604080516001600160a01b039092168252519081900360200190f35b600190565b63111111429056fea26469706673582212206764bdb65af1923b7c2212329e0b5145e322d9834b7700ef3cd8e80c9a459d2c64736f6c634300060c0033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH1 0x32 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0xABF8E0E7 EQ PUSH1 0x37 JUMPI DUP1 PUSH4 0xF851A440 EQ PUSH1 0x51 JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH1 0x3D PUSH1 0x73 JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD SWAP2 ISZERO ISZERO DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH1 0x57 PUSH1 0x78 JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB SWAP1 SWAP3 AND DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH1 0x1 SWAP1 JUMP JUMPDEST PUSH4 0x11111142 SWAP1 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH8 0x64BDB65AF1923B7C 0x22 SLT ORIGIN SWAP15 SIGNEXTEND MLOAD GASLIMIT 0xE3 0x22 0xD9 DUP4 0x4B PUSH24 0xEF3CD8E80C9A459D2C64736F6C634300060C0033000000 ",
+              "sourceMap": "259:232:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;409:80;;;:::i;:::-;;;;;;;;;;;;;;;;;;296:109;;;:::i;:::-;;;;-1:-1:-1;;;;;296:109:0;;;;;;;;;;;;;;409:80;480:4;409:80;:::o;296:109::-;358:42;296:109;:::o"
+            },
+            "methodIdentifiers": {
+              "admin()": "f851a440",
+              "delegatedFunction()": "abf8e0e7"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "contracts/contracts-v3_4/mocks/ClashingImplementation.sol": {
+        "ast": {
+          "absolutePath": "contracts/contracts-v3_4/mocks/ClashingImplementation.sol",
+          "exportedSymbols": {
+            "ClashingImplementation": [
+              19
+            ]
+          },
+          "id": 20,
+          "license": "MIT",
+          "nodeType": "SourceUnit",
+          "nodes": [
+            {
+              "id": 1,
+              "literals": [
+                "solidity",
+                ">=",
+                "0.6",
+                ".0",
+                "<",
+                "0.8",
+                ".0"
+              ],
+              "nodeType": "PragmaDirective",
+              "src": "33:31:0"
+            },
+            {
+              "abstract": false,
+              "baseContracts": [],
+              "contractDependencies": [],
+              "contractKind": "contract",
+              "documentation": {
+                "id": 2,
+                "nodeType": "StructuredDocumentation",
+                "src": "67:191:0",
+                "text": " @dev Implementation contract with an admin() function made to clash with\n @dev TransparentUpgradeableProxy's to test correct functioning of the\n @dev Transparent Proxy feature."
+              },
+              "fullyImplemented": true,
+              "id": 19,
+              "linearizedBaseContracts": [
+                19
+              ],
+              "name": "ClashingImplementation",
+              "nodeType": "ContractDefinition",
+              "nodes": [
+                {
+                  "body": {
+                    "id": 9,
+                    "nodeType": "Block",
+                    "src": "345:60:0",
+                    "statements": [
+                      {
+                        "expression": {
+                          "argumentTypes": null,
+                          "hexValue": "307830303030303030303030303030303030303030303030303030303030303030303131313131313432",
+                          "id": 7,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "kind": "number",
+                          "lValueRequested": false,
+                          "nodeType": "Literal",
+                          "src": "358:42:0",
+                          "subdenomination": null,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address_payable",
+                            "typeString": "address payable"
+                          },
+                          "value": "0x0000000000000000000000000000000011111142"
+                        },
+                        "functionReturnParameters": 6,
+                        "id": 8,
+                        "nodeType": "Return",
+                        "src": "351:49:0"
+                      }
+                    ]
+                  },
+                  "documentation": null,
+                  "functionSelector": "f851a440",
+                  "id": 10,
+                  "implemented": true,
+                  "kind": "function",
+                  "modifiers": [],
+                  "name": "admin",
+                  "nodeType": "FunctionDefinition",
+                  "overrides": null,
+                  "parameters": {
+                    "id": 3,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "310:2:0"
+                  },
+                  "returnParameters": {
+                    "id": 6,
+                    "nodeType": "ParameterList",
+                    "parameters": [
+                      {
+                        "constant": false,
+                        "id": 5,
+                        "mutability": "mutable",
+                        "name": "",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 10,
+                        "src": "336:7:0",
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "typeName": {
+                          "id": 4,
+                          "name": "address",
+                          "nodeType": "ElementaryTypeName",
+                          "src": "336:7:0",
+                          "stateMutability": "nonpayable",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      }
+                    ],
+                    "src": "335:9:0"
+                  },
+                  "scope": 19,
+                  "src": "296:109:0",
+                  "stateMutability": "pure",
+                  "virtual": false,
+                  "visibility": "external"
+                },
+                {
+                  "body": {
+                    "id": 17,
+                    "nodeType": "Block",
+                    "src": "467:22:0",
+                    "statements": [
+                      {
+                        "expression": {
+                          "argumentTypes": null,
+                          "hexValue": "74727565",
+                          "id": 15,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "kind": "bool",
+                          "lValueRequested": false,
+                          "nodeType": "Literal",
+                          "src": "480:4:0",
+                          "subdenomination": null,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          },
+                          "value": "true"
+                        },
+                        "functionReturnParameters": 14,
+                        "id": 16,
+                        "nodeType": "Return",
+                        "src": "473:11:0"
+                      }
+                    ]
+                  },
+                  "documentation": null,
+                  "functionSelector": "abf8e0e7",
+                  "id": 18,
+                  "implemented": true,
+                  "kind": "function",
+                  "modifiers": [],
+                  "name": "delegatedFunction",
+                  "nodeType": "FunctionDefinition",
+                  "overrides": null,
+                  "parameters": {
+                    "id": 11,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "435:2:0"
+                  },
+                  "returnParameters": {
+                    "id": 14,
+                    "nodeType": "ParameterList",
+                    "parameters": [
+                      {
+                        "constant": false,
+                        "id": 13,
+                        "mutability": "mutable",
+                        "name": "",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 18,
+                        "src": "461:4:0",
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        "typeName": {
+                          "id": 12,
+                          "name": "bool",
+                          "nodeType": "ElementaryTypeName",
+                          "src": "461:4:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      }
+                    ],
+                    "src": "460:6:0"
+                  },
+                  "scope": 19,
+                  "src": "409:80:0",
+                  "stateMutability": "pure",
+                  "virtual": false,
+                  "visibility": "external"
+                }
+              ],
+              "scope": 20,
+              "src": "259:232:0"
+            }
+          ],
+          "src": "33:459:0"
+        },
+        "id": 0
+      }
+    }
+  }
+}

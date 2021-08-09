@@ -1,0 +1,10 @@
+tests in order
+
+1- approve USDC, DAI, and USDT for transfer into the pool
+2- deposit liquidity (deposit 500 of each)
+3- swap 1 DAI for USDC, check that fee was accrued and check the output
+4- swap 1 DAI for USDT, check that fee was accrued and check the output
+5- swap 1 USDC for DAI, check that fee and output ok
+6- swap 1 USDC for USDT, check fee and output
+7- swap 1 USDT for DAI, check fee and output
+8- swap 1 USDT for USDC, check fee and output

@@ -1,0 +1,5 @@
+// To attach swapFlashLoanV1 in terminal...
+
+const SwapFlashLoan = await ethers.getContractFactory("SwapFlashLoanV1", {    libraries: {      AmplificationUtilsV1: '0xF3A86f742C2644e8021CEe6EDA2b067C3A154E51',      SwapUtilsV1: '0xd789e451a107c989B9256342B9c94045bAA57396'    },  });
+
+const swap = await SwapFlashLoan.attach('0xb3E1ef68076bdB0393C21Bc20944A07579430425');
