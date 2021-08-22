@@ -28,7 +28,7 @@ contract SwapDeployerV1 is Ownable {
         address lpTokenTargetAddress
     ) external returns (address) {
         address swapClone = Clones.clone(swapFlashLoanAddress);
-        ISwapV1(swapClone).initialize( //TODO: change this to deploy SwapFlashLoan
+        ISwapFlashLoanV1(swapClone).initialize( //TODO: change this to deploy SwapFlashLoan
             _pooledTokens,
             decimals,
             lpTokenName,

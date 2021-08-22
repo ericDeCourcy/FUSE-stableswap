@@ -10,7 +10,7 @@ require("@nomiclabs/hardhat-web3");
 
 
 // private key link
-const { privateKey } = require('./secrets.json');
+const { privateKey, honeypotPrivateKey, haxorPrivateKey } = require('./secrets.json');
 
 // etherscan plugin
 require("@nomiclabs/hardhat-etherscan");
@@ -48,7 +48,7 @@ module.exports = {
     ropsten: {
       url: "https://eth-ropsten.alchemyapi.io/v2/u2Y8hHpPxYUvAeu4tynnAxE_6mz2V-bw",
       accounts: [privateKey]
-    }
+    },
   },
 
   etherscan: {
