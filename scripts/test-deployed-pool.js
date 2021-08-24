@@ -18,9 +18,14 @@ async function main() {
   const owner = await ethers.getSigners();
   /////////////////////////////////////////////////////////////
 
-  
 
-  /////// instantiate contracts and attach them to their respective addresses //////////
+
+  // let the uer know it's running...
+  console.log("Starting test script");
+
+
+
+  /////// instantiate contracts and attach them to their respective addresses //////////  
   const swaputils = await ethers.getContractFactory("SwapUtilsV1");
   const SwapUtils = await swaputils.attach(SwapUtilsAddress);
 
@@ -46,22 +51,28 @@ async function main() {
 
   //////////////////////// mint preset and approve tokens for transfer to swap instance //////////
   // mint preset for each token (1K of each token)
+  console.log("Minting fake DAI");
   const fakeDaiMint = await FakeDAI.mintPreset();
   await new Promise(r => setTimeout(r, timeout));
 
+  console.log("Minting fake USDC");
   const fakeUsdcMint = await FakeUSDC.mintPreset();
   await new Promise(r => setTimeout(r, timeout));
 
+  console.log("Minting fake USDT");
   const fakeUsdtMint = await FakeUSDT.mintPreset();  
   await new Promise(r => setTimeout(r, timeout));
   
   // approve tokens for pool
+  console.log("approving fake DAI");
   const fakeDaiApprove = await FakeDAI.approve(SwapFlashLoanAddress,"10000000000000000000000"); //10k dai
   await new Promise(r => setTimeout(r, timeout));
 
+  console.log("approving fake USDC");
   const fakeUsdcApprove = await FakeUSDC.approve(SwapFlashLoanAddress,10000000000);  //10k USDC
   await new Promise(r => setTimeout(r, timeout));
 
+  console.log("approving fake USDT");
   const fakeUsdtApprove = await FakeUSDT.approve(SwapFlashLoanAddress,10000000000); //10K USDT
   await new Promise(r => setTimeout(r, timeout));
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,14 +126,17 @@ async function main() {
   // swap 5 dai for USDC
   const swapDAIUSDC = await SwapFlashLoan.swap(0,1,"5000000000000000000",1,1659586065);
   console.log("calling swap 5 DAI -> USDC");
+    await new Promise(r => setTimeout(r, timeout)); 
 
   // swap 5 dai for USDT
   const swapDAIUSDT = await SwapFlashLoan.swap(0,2,"5000000000000000000",1,1659586065);
   console.log("calling swap 5 DAI -> USDT");
+    await new Promise(r => setTimeout(r, timeout)); 
 
   // swap 5 USDT to USDC
   const swapUSDTUSDC = await SwapFlashLoan.swap(2,1,"5000000",1,1659586065);
   console.log("calling swap 5 USDT -> USDC");
+    await new Promise(r => setTimeout(r, timeout)); 
   ///////////////////////////////////////////////////////////////////////////////////////
 }
 
