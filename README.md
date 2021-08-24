@@ -13,7 +13,7 @@ To run the demo, you will need:
 
 Once you have these requirements, you should download this repo. 
 
-Once the repo is saved somewhere, using the terminal, navigate to the directory containing `package.json`. Run `npm --save-dev` to install the dependencies for the project.
+Once the repo is saved somewhere, using the terminal, navigate to the directory containing `package.json`. Run `npm i --save-dev` to install the dependencies for the project.
 
 Within the top level directory of the repo, create a file called `secrets.json`. This should be in the same directory as `hardhat.config.js`. 
 
