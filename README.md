@@ -4,7 +4,7 @@ This is an implementation of the StableSwap algorithm for Fuse network. Curve an
 
 ### How to run the Demo
 
-Currently (as of Aug 22, 2021) the demo interacts with a "Fake USD" pool. The pool contains fake versions of DAI, USDT, and USDC. **All of these tokens are worthless and freely mintable on Fuse network**. 
+Currently (as of Aug 23, 2021) the demo interacts with a "Fake USD" pool. The pool contains fake versions of DAI, USDT, and USDC. **All of these tokens are worthless and freely mintable on Fuse network**. 
 
 To run the demo, you will need:
 * to have a private key for FUSE network. You can get this from metamask easily.
