@@ -25,6 +25,6 @@ Within `secrets.json`, put the following:
 }
 ```
 
-Replace `<your private key here>` with the private key for an account holding FUSE tokens. This can be obtained from metamask, or most other wallets. Be sure not to include a `0x` prefix, and be sure to keep the `"double quotes"` around your private key.
+Replace `<your private key here>` with the private key for an account holding FUSE tokens. This can be obtained from metamask, or most other wallets. Be sure not to include a `0x` prefix, and be sure to keep the `"double quotes"` around your private key. And of course, don't disclose this to anyone, because it's the private key to your account.
  
 Once this is done, run `npx hardhat run scripts/test-deployed-pool.js --network fuse`. This will take a while. It will send transactions from your account to interact with the deployed pool.
