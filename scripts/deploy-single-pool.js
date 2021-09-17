@@ -60,28 +60,34 @@ async function main() {
 
   await new Promise(r => setTimeout(r, timeout));
   
-  // mint preset, then approve for transfer to pool contract
+  // mint preset amounts of each token
+  // fake dai...
   const fakeDaiMint = await fakedai.mintPreset();
 
   await new Promise(r => setTimeout(r, timeout));
 
+  // fake usdc...
   const fakeUsdcMint = await fakeusdc.mintPreset();
 
   await new Promise(r => setTimeout(r, timeout));
 
+  // fake usdt...
   const fakeUsdtMint = await fakeusdt.mintPreset();  
 
   await new Promise(r => setTimeout(r, timeout));
   
   // approve tokens for pool
+  // fake dai...
   const fakeDaiApprove = await fakedai.approve(swapflashloan.address,"10000000000000000000000"); //10k dai
 
   await new Promise(r => setTimeout(r, timeout));
 
+  // fake usdc...
   const fakeUsdcApprove = await fakeusdc.approve(swapflashloan.address,10000000000);  //10k USDC
 
   await new Promise(r => setTimeout(r, timeout));
-
+ 
+  // fake usdt...
   const fakeUsdtApprove = await fakeusdt.approve(swapflashloan.address,10000000000); //10K USDT
   
   await new Promise(r => setTimeout(r, timeout));
