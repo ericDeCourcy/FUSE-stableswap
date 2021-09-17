@@ -4,8 +4,8 @@ pragma solidity 0.6.12;
 
 import "./contracts-v3_4/math/SafeMath.sol";
 import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
-import "./AmplificationUtilsV1.sol";
-import "./LPTokenV1.sol";
+import "./AmplificationUtilsV2.sol";
+import "./LPTokenV2.sol";
 import "./MathUtils.sol";
 
 /**
@@ -15,7 +15,7 @@ import "./MathUtils.sol";
  * for SwapUtils.Swap struct. Note that this library contains both functions called by users and admins.
  * Admin functions should be protected within contracts using this library.
  */
-library SwapUtilsV1 {
+library SwapUtilsV2 {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using MathUtils for uint256;
@@ -71,7 +71,7 @@ library SwapUtilsV1 {
         uint256 swapFee;
         uint256 adminFee;
         uint256 defaultWithdrawFee;
-        LPTokenV1 lpToken;
+        LPTokenV2 lpToken;
         // contract references for all tokens being pooled
         IERC20[] pooledTokens;
         // multipliers for each pooled token's precision to get to POOL_PRECISION_DECIMALS
@@ -102,7 +102,7 @@ library SwapUtilsV1 {
         uint256 d1;
         uint256 d2;
         uint256 preciseA;
-        LPTokenV1 lpToken;
+        LPTokenV2 lpToken;
         uint256 totalSupply;
         uint256[] balances;
         uint256[] multipliers;
@@ -133,7 +133,7 @@ library SwapUtilsV1 {
     uint256 private constant MAX_LOOP_LIMIT = 256;
 
     // Time that it should take for the withdraw fee to fully decay to 0
-    uint256 public constant WITHDRAW_FEE_DECAY_TIME = 0; // TODO-POSTV@: this was originally set to 4 weeks, figure out if we want to keep it as 0
+    uint256 public constant WITHDRAW_FEE_DECAY_TIME = 0; // TODO-POSTV2: this was originally set to 4 weeks, figure out if we want to keep it as 0
                                                          // currently this is 0 for testing
 
     /*** VIEW & PURE FUNCTIONS ***/
@@ -152,7 +152,7 @@ library SwapUtilsV1 {
     }
 
     function _getAPrecise(Swap storage self) internal view returns (uint256) {
-        return AmplificationUtilsV1._getAPrecise(self);
+        return AmplificationUtilsV2._getAPrecise(self);
     }
 
     /**
@@ -322,11 +322,11 @@ library SwapUtilsV1 {
                 // c = c * D * D * D * ... overflow!
             }
         }
-        c = c.mul(d).mul(AmplificationUtilsV1.A_PRECISION).div(
+        c = c.mul(d).mul(AmplificationUtilsV2.A_PRECISION).div(
             nA.mul(numTokens)
         );
 
-        uint256 b = s.add(d.mul(AmplificationUtilsV1.A_PRECISION).div(nA));
+        uint256 b = s.add(d.mul(AmplificationUtilsV2.A_PRECISION).div(nA));
         uint256 yPrev;
         uint256 y = d;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
@@ -376,14 +376,14 @@ library SwapUtilsV1 {
             prevD = d;
             d = nA
                 .mul(s)
-                .div(AmplificationUtilsV1.A_PRECISION)
+                .div(AmplificationUtilsV2.A_PRECISION)
                 .add(dP.mul(numTokens))
                 .mul(d)
                 .div(
                 nA
-                    .sub(AmplificationUtilsV1.A_PRECISION)
+                    .sub(AmplificationUtilsV2.A_PRECISION)
                     .mul(d)
-                    .div(AmplificationUtilsV1.A_PRECISION)
+                    .div(AmplificationUtilsV2.A_PRECISION)
                     .add(numTokens.add(1).mul(dP))
             );
             if (d.within1(prevD)) {
@@ -447,7 +447,7 @@ library SwapUtilsV1 {
         returns (uint256)
     {
         uint256 d = getD(_xp(self), _getAPrecise(self));
-        LPTokenV1 lpToken = self.lpToken;
+        LPTokenV2 lpToken = self.lpToken;
         uint256 supply = lpToken.totalSupply();
         if (supply > 0) {
             return d.mul(10**uint256(POOL_PRECISION_DECIMALS)).div(supply);
@@ -505,10 +505,10 @@ library SwapUtilsV1 {
             // and divide at the end. However this leads to overflow with large numTokens or/and D.
             // c = c * D * D * D * ... overflow!
         }
-        c = c.mul(d).mul(AmplificationUtilsV1.A_PRECISION).div(
+        c = c.mul(d).mul(AmplificationUtilsV2.A_PRECISION).div(
             nA.mul(numTokens)
         );
-        uint256 b = s.add(d.mul(AmplificationUtilsV1.A_PRECISION).div(nA));
+        uint256 b = s.add(d.mul(AmplificationUtilsV2.A_PRECISION).div(nA));
         uint256 yPrev;
         uint256 y = d;
 
@@ -980,7 +980,7 @@ library SwapUtilsV1 {
         uint256 amount,
         uint256[] calldata minAmounts
     ) external returns (uint256[] memory) {
-        LPTokenV1 lpToken = self.lpToken;
+        LPTokenV2 lpToken = self.lpToken;
         IERC20[] memory pooledTokens = self.pooledTokens;
         require(amount <= lpToken.balanceOf(msg.sender), ">LP.balanceOf");
         require(
@@ -1027,7 +1027,7 @@ library SwapUtilsV1 {
         uint8 tokenIndex,
         uint256 minAmount
     ) external returns (uint256) {
-        LPTokenV1 lpToken = self.lpToken;
+        LPTokenV2 lpToken = self.lpToken;
         IERC20[] memory pooledTokens = self.pooledTokens;
 
         require(tokenAmount <= lpToken.balanceOf(msg.sender), ">LP.balanceOf");
