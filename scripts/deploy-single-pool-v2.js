@@ -1,36 +1,48 @@
+// TODO: make sure that everything here says "V2" instead of "V1"
+
 async function main() {
   
   const timeout = 25000;
   
   const owner = await ethers.getSigners();
   
-  // deploy SwapUtilsV1
-  const SwapUtils = await ethers.getContractFactory("SwapUtilsV1");
+  console.log("starting deploy script...");
+  
+  // deploy SwapUtilsV2
+  const SwapUtils = await ethers.getContractFactory("SwapUtilsV2");
   const swaputils = await SwapUtils.deploy();
-  console.log("SwapUtilsV1 deployed to:", swaputils.address);
+  console.log("SwapUtilsV2 deployed to:", swaputils.address);
   
   await new Promise(r => setTimeout(r, timeout));
   
   // deploy AmplificationUtils
-  const AmplificationUtils = await ethers.getContractFactory("AmplificationUtilsV1");
+  const AmplificationUtils = await ethers.getContractFactory("AmplificationUtilsV2");
   const amplificationUtils = await AmplificationUtils.deploy();
-  console.log("AmplificationUtilsV1 deployed to:", amplificationUtils.address);
+  console.log("AmplificationUtilsV2 deployed to:", amplificationUtils.address);
 
   await new Promise(r => setTimeout(r, timeout));
   
-  //deploy SwapFlashLoanV1
-  const SwapFlashLoan = await ethers.getContractFactory("SwapFlashLoanV1", {libraries: {AmplificationUtilsV1: amplificationUtils.address, SwapUtilsV1: swaputils.address},});
+  //deploy SwapFlashLoanV2
+  const SwapFlashLoan = await ethers.getContractFactory("SwapFlashLoanV2", {libraries: {AmplificationUtilsV2: amplificationUtils.address, SwapUtilsV2: swaputils.address},});
   const swapflashloan = await SwapFlashLoan.deploy();
   console.log("swapflashloan deployed to:", swapflashloan.address);
 
   await new Promise(r => setTimeout(r, timeout));  
   
-  // deploy LPTokenV1
-  const LPToken = await ethers.getContractFactory("LPTokenV1");
+  // deploy LPTokenV2
+  const LPToken = await ethers.getContractFactory("LPTokenV2");
   const lptoken = await LPToken.deploy();
-  console.log("LPTokenV1 deployed to:", lptoken.address);
+  console.log("LPTokenV2 deployed to:", lptoken.address);
 
   await new Promise(r => setTimeout(r, timeout));
+  
+  // deploy LPRewardsV2
+  const LPRewards = await ethers.getContractFactory("LPRewardsV2");
+  const lprewards = await LPRewards.deploy();
+  console.log("LPRewardsV2 deployed to:", lprewards.address);
+  
+  await new Promise(r => setTimeout(r, timeout));
+  
   
   // deploy 3 fake tokens
   // deploy fake DAI
@@ -55,7 +67,18 @@ async function main() {
   await new Promise(r => setTimeout(r, timeout));
  
   // initialize pool
-  const INIT = await swapflashloan.initialize([fakedai.address,fakeusdc.address,fakeusdt.address],[18,6,6],"FSS-FAKE-DAI-USDC-USDT-V1","LP-FAKE-USD-V1",100,100,100,0,lptoken.address);
+  /*
+        IERC20[] memory _pooledTokens,
+        uint8[] memory decimals,
+        string memory lpTokenName,
+        string memory lpTokenSymbol,
+        uint256 _a,
+        uint256 _fee,
+        uint256 _adminFee,
+        address lpTokenTargetAddress,
+        address lpRewardsTargetAddress
+  */
+  const INIT = await swapflashloan.initialize([fakedai.address,fakeusdc.address,fakeusdt.address],[18,6,6],"FSS-FAKE-DAI-USDC-USDT-V2","LP-FAKE-USD-V2",100,100,100,lptoken.address,lprewards.address);
   console.log("pool initialized in hash:", INIT);
 
   await new Promise(r => setTimeout(r, timeout));
@@ -63,33 +86,39 @@ async function main() {
   // mint preset amounts of each token
   // fake dai...
   const fakeDaiMint = await fakedai.mintPreset();
+  console.log("minting fake dai");
 
   await new Promise(r => setTimeout(r, timeout));
 
   // fake usdc...
   const fakeUsdcMint = await fakeusdc.mintPreset();
+  console.log("minting fake usdc");
 
   await new Promise(r => setTimeout(r, timeout));
 
   // fake usdt...
   const fakeUsdtMint = await fakeusdt.mintPreset();  
+  console.log("minting fake usdt");
 
   await new Promise(r => setTimeout(r, timeout));
   
   // approve tokens for pool
   // fake dai...
   const fakeDaiApprove = await fakedai.approve(swapflashloan.address,"10000000000000000000000"); //10k dai
+  console.log("approving fake dai");
 
   await new Promise(r => setTimeout(r, timeout));
 
   // fake usdc...
   const fakeUsdcApprove = await fakeusdc.approve(swapflashloan.address,10000000000);  //10k USDC
+  console.log("approving fake usdc");
 
   await new Promise(r => setTimeout(r, timeout));
  
   // fake usdt...
   const fakeUsdtApprove = await fakeusdt.approve(swapflashloan.address,10000000000); //10K USDT
-  
+  console.log("approving fake usdt");
+
   await new Promise(r => setTimeout(r, timeout));
  
   // add liquidity of 100 of each token
@@ -101,6 +130,19 @@ async function main() {
   // add liquidity of 10,10,100
   await swapflashloan.addLiquidity(["10000000000000000000","10000000","100000000"],1,1659586065);
   console.log("calling addliquidity imblanced");
+  
+  await new Promise(r => setTimeout(r, timeout));
+  
+  // deploy rewards token
+  const RewardToken = await ethers.getContractFactory("MockRewardTokenMintable");
+  const rewardtoken = await RewardToken.deploy();
+  console.log("deploying fake reward token");
+  
+  await new Promise(r => setTimeout(r, timeout));
+  
+  // mint preset on rewards token
+  await rewardtoken.mintPreset();
+  console.log("minting preset on fake reward token");
   
   await new Promise(r => setTimeout(r, timeout));
   
@@ -135,18 +177,18 @@ async function main() {
   // swap 5 dai for USDC
   const swapAction = await swapflashloan.swap(0,1,"5000000000000000000",1,1659586065);
   console.log("calling swap");
-  
-  console.log("You will need to manually call approve and then remove liquidity");
-  console.log("call approve in the contract which is the return value in this transaction:", INIT.hash);
-  console.log("approve the swap contract to transfer your LP tokens. Swap contract address: ", swapflashloan.address);
-  console.log("SwapUtils: ", swaputils.address);
-  console.log("AmpUtils: ", amplificationUtils.address);
+  console.log("");  
+  console.log("You will need to manually call approve and then remove liquidity.");
+  console.log("call `approve` in the LP token contract. You will need to `approve` the Swap contract to transfer your tokens. Both of these contracts are deployed as proxies by this transaction:", INIT.hash);
   console.log(" ");
   console.log("const SwapFlashLoan = await ethers.getContractFactory(\"SwapFlashLoanV1\", {libraries: {AmplificationUtilsV1: <addr>, SwapUtilsV1: <addr>},});");
-  console.log("const swap = await SwapFlashLoan.attach(\"",swapflashloan.address,"\"");
+  console.log("const swap = await SwapFlashLoan.attach(\"<poolAddress>\");");
   console.log(" ");
-  console.log("const LPTOKEN = await ethers.getContractFactory(\"ERC20\")");
-  console.log("const lptoken = LPTOKEN.attach(<lp token addr>)");
+  console.log("const LPTOKEN = await ethers.getContractFactory(\"ERC20\");");
+  console.log("const lptoken = await LPTOKEN.attach(<lp token addr>);");
+  console.log(" ");
+  console.log("const approveAction = await lptoken.approve(\"<poolAddress>\", \"999999999999999999999999999\");");
+  console.log(" ");
 }
 
 main()
