@@ -16,6 +16,12 @@ The final screen has different tabs in it, which allow for depositing, swapping,
 
 _Balanced Withdrawals_ withdraw coins in proportions equal to the pool's holdings. This is generally the easiest, you specify the amount of LP tokens you want to burn. _Imbalanced Withdrawals_ allow you specify how many of each token you'd like to get, and burns LPs accordingly to get you this amount. _Single Token Withdrawals_ allow you to specify a single token and amount of it to withdraw.
 
+### Flashloans
+
+By the way, the pool allows for flash loans. More info on this soon, but developers can look at `SwapFlashloanV3.sol` function `flashloan()` to get an idea for how to do this.
+
+< TODO >
+
 ### Safety
 
 The pool has not been audited. 
