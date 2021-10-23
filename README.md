@@ -1,32 +1,24 @@
+> _Updated Oct 23 2021_
+
 ### Fuse Stable Swap
 
 This is an implementation of the StableSwap algorithm for Fuse network. Curve and Saddle are both examples of StableSwap implementations on Mainnet Ethereum. Fuse Stable Swap is a fork of Saddle.
 
-Fuse Stable Swap is currently (as of October 23 2021) deployed at [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions) on Fuse network. It swaps between DAI <> USDC <> USDT with low slippage. The interface can be found at [ericdecourcy.github.io](https://ericdecourcy.github.io/).
+Fuse Stable Swap is currently deployed at [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions) on Fuse network. It swaps between DAI <> USDC <> USDT with low slippage. The interface can be found at [ericdecourcy.github.io](https://ericdecourcy.github.io/). This pool is an instance of V3, which has rewards distributions and an adjustable total  LP cap.
 
-### How to run the Demo
+### How to use the webpage
 
-Currently (as of Aug 23, 2021) the demo interacts with a "Fake USD" pool. The pool contains fake versions of DAI, USDT, and USDC. **All of these tokens are worthless and freely mintable on Fuse network**. 
+The first screen will connect metamask to the webpage.
 
-To run the demo, you will need:
-* to have a private key for FUSE network. You can get this from metamask easily.
-* to have enough FUSE to pay for gas fees. About 0.1 FUSE currently should be plenty. This should be in the account associated with your FUSE private key
-* to have `npm` installed
+The next screen will prompt you to approve tokens involved with the pool. If you're swapping between tokens, you'll need to **approve whatever token you're sending in to the swap**. If you're depositing tokens into the pool, you'll need to **approve any tokens you're depositing**. You'll need to **approve LP tokens for any withdraws**.
 
-Once you have these requirements, you should download this repo. 
+The final screen has different tabs in it, which allow for depositing, swapping, withdrawing, and claiming rewards. 
 
-Once the repo is saved somewhere, using the terminal, navigate to the directory containing `package.json`. Run `npm i --save-dev` to install the dependencies for the project.
+### Safety
 
-Within the top level directory of the repo, create a file called `secrets.json`. This should be in the same directory as `hardhat.config.js`. 
+The pool has not been audited. 
 
-Within `secrets.json`, put the following:
+The pool is capped to a maximum number of LP tokens, currently 5000. If one attempts deposit funds which would put the totalSupply of LP tokens above 5000, the transaction will revert. Eventually the cap will be lifted, up to the maximum uint256 value.
 
-```
-{
-    "privateKey": "<your private key here>"
-}
-```
+Rewards contracts are separate from pool contracts, and do not affect pool contract state. This is by design to minimize any impacts from reward contract vulnerabilities.
 
-Replace `<your private key here>` with the private key for an account holding FUSE tokens. This can be obtained from metamask, or most other wallets. Be sure not to include a `0x` prefix, and be sure to keep the `"double quotes"` around your private key.
- 
-Once this is done, run `npx hardhat run scripts/test-deployed-pool.js --network fuse`. This will take a while. It will send transactions from your account to interact with the deployed pool.
