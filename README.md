@@ -12,7 +12,9 @@ The first screen will connect metamask to the webpage.
 
 The next screen will prompt you to approve tokens involved with the pool. If you're swapping between tokens, you'll need to **approve whatever token you're sending in to the swap**. If you're depositing tokens into the pool, you'll need to **approve any tokens you're depositing**. You'll need to **approve LP tokens for any withdraws**.
 
-The final screen has different tabs in it, which allow for depositing, swapping, withdrawing, and claiming rewards. 
+The final screen has different tabs in it, which allow for depositing, swapping, withdrawing, and claiming rewards. For withdrawals, there are different types to select. 
+
+_Balanced Withdrawals_ withdraw coins in proportions equal to the pool's holdings. This is generally the easiest, you specify the amount of LP tokens you want to burn. _Imbalanced Withdrawals_ allow you specify how many of each token you'd like to get, and burns LPs accordingly to get you this amount. _Single Token Withdrawals_ allow you to specify a single token and amount of it to withdraw.
 
 ### Safety
 
@@ -20,5 +22,5 @@ The pool has not been audited.
 
 The pool is capped to a maximum number of LP tokens, currently 5000. If one attempts deposit funds which would put the totalSupply of LP tokens above 5000, the transaction will revert. Eventually the cap will be lifted, up to the maximum uint256 value.
 
-Rewards contracts are separate from pool contracts, and do not affect pool contract state. This is by design to minimize any impacts from reward contract vulnerabilities.
+Rewards contracts are separate from pool contracts, and do not affect pool contract state. This is by design to minimize any impacts from reward contract vulnerabilities. 
 
