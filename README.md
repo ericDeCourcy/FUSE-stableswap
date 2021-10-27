@@ -4,9 +4,11 @@ This is an implementation of the StableSwap algorithm for Fuse network. Curve an
 
 Fuse Stable Swap is currently (as of October 23 2021) deployed at [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions) on Fuse network. It swaps between DAI <> USDC <> USDT with low slippage. The interface can be found at [ericdecourcy.github.io](https://ericdecourcy.github.io/).
 
-### How to run the Demo
+### How to run the Demo 
 
-Currently (as of Aug 23, 2021) the demo interacts with a "Fake USD" pool. The pool contains fake versions of DAI, USDT, and USDC. **All of these tokens are worthless and freely mintable on Fuse network**. 
+**Note that the demo does not interact with the real pool**
+
+As of Aug 23, 2021, the demo interacts with a "Fake USD" pool. The pool contains fake versions of DAI, USDT, and USDC. **All of these tokens are worthless and freely mintable on Fuse network**. 
 
 To run the demo, you will need:
 * to have a private key for FUSE network. You can get this from metamask easily.
