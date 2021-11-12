@@ -1,6 +1,0 @@
-The first deployment (deployment "0") was deployed by address:
-0x1dD7fFeFB7c6417d68D1b38Be422F6113eebD7Df
-
-It was a simple instance of swapFlashLoan, without a deployer contract (just a standalone)
-it included deploying instances of FakeDAI, FakeUSDC, FakeUSDT by the same address
-
