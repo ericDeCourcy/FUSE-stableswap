@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 
 import "./contracts-v3_4/access/Ownable.sol";
 import "./contracts-v3_4/proxy/Clones.sol";
-import "./interfaces/ISwapFlashLoanV1.sol";
+import "./interfaces/ISwapFlashLoanV3.sol";
 
 contract SwapDeployerV3 is Ownable {
     event NewSwapPool(
@@ -24,11 +24,11 @@ contract SwapDeployerV3 is Ownable {
         uint256 _a,
         uint256 _fee,
         uint256 _adminFee,
-        uint256 _withdrawFee,
-        address lpTokenTargetAddress
+        address lpTokenTargetAddress,
+        address lpRewardsTargetAddress
     ) external returns (address) {
         address swapClone = Clones.clone(swapFlashLoanAddress);
-        ISwapFlashLoanV1(swapClone).initialize(
+        ISwapFlashLoanV3(swapClone).initialize(
             _pooledTokens,
             decimals,
             lpTokenName,
@@ -36,8 +36,8 @@ contract SwapDeployerV3 is Ownable {
             _a,
             _fee,
             _adminFee,
-            _withdrawFee,
-            lpTokenTargetAddress
+            lpTokenTargetAddress,
+            lpRewardsTargetAddress
         );
         Ownable(swapClone).transferOwnership(owner());
         emit NewSwapPool(msg.sender, swapClone, _pooledTokens);
