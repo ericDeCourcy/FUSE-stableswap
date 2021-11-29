@@ -54,8 +54,8 @@ interface ISwapV3 {
         uint256 a,
         uint256 fee,
         uint256 adminFee,
-        uint256 withdrawFee,
-        address lpTokenTargetAddress
+        address lpTokenTargetAddress,
+        address lpRewardsTargetAddress
     ) external;
 
     function swap(

@@ -274,6 +274,7 @@ contract SwapV3 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         return index;
     }
 
+    // TODO: is this even needed? Remove it if unneeded
     /**
      * @notice Return timestamp of last deposit of given address
      * @return timestamp of the last deposit made by the given address
@@ -550,7 +551,8 @@ contract SwapV3 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /*** ADMIN FUNCTIONS ***/
-
+    
+    // TODO: can we remove this as well?
     /**
      * @notice Updates the user withdraw fee. This function can only be called by
      * the pool token. Should be used to update the withdraw fee on transfer of pool tokens.
