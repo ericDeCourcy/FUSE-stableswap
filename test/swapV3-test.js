@@ -68,8 +68,12 @@ describe("SwapV3-test", function () {
 
         // initialize swapflashloan instance
         // this makes it easier to run tests on, since we know the address of swapflashloan (deployer creates new address and is more difficult to get the address of swap)
-        const INIT_STANDALONE = await swapflashloan.initialize([fakeDAIContract.address, fakeUSDCContract.address, fakeUSDTContract.address], [18, 6, 6], "FSS-FAKE-DAI-USDC-USDT-V3", "LP-FAKE-USD-V3", 100, 100, 100, lptoken.address, lprewards.address);
+        // fee should be 10e7 because that's 0.1%
+        // admin fee should be 10e9 because thats 10% - this means 10% of 0.1%... so admin gets 0.01% of each trade, LPs get 0.09% 
+        const INIT_STANDALONE = await swapflashloan.initialize([fakeDAIContract.address, fakeUSDCContract.address, fakeUSDTContract.address], [18, 6, 6], "FSS-FAKE-DAI-USDC-USDT-V3", "LP-FAKE-USD-V3", 100, 10000000, 1000000000, lptoken.address, lprewards.address);
         
+       
+
         // get some fake tokens
         const DAI_MINT = await fakeDAIContract.mintPreset();
         const USDC_MINT = await fakeUSDCContract.mintPreset();
@@ -213,10 +217,30 @@ describe("SwapV3-test", function () {
         });
 
         it("Pool should allow single-token withdrawals", async function () {
-            expect(1).to.equal(0); //fails until test is built
+            // check admin token balances before claiming fees
+            const DaiBalanceBefore = await fakeDAIContract.balanceOf(owner.address);
+            const UsdcBalanceBefore = await fakeUSDCContract.balanceOf(owner.address);
+            const UsdtBalanceBefore = await fakeUSDTContract.balanceOf(owner.address);
 
-            // TODO: find some decent way to chain assertions together
+            // approve LP token burn
+            const swapStorage = await swapflashloan.swapStorage();          // get swap info
+            const lpTokenAddress = swapStorage.lpToken;                     // get lp token
+            const LPTokenV3 = await ethers.getContractFactory("LPTokenV3"); // get lp token contract artifact
+            const lpTokenInstance = await LPTokenV3.attach(lpTokenAddress); // attach lp address to contract artifact
+            const APPROVAL = await lpTokenInstance.approve(swapflashloan.address, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+            // withdraw ONLY one DAI
+            const SINGLE_TOKEN_WITHDRAW = await swapflashloan.removeLiquidityOneToken("1000000000000000000", 0, 1, TIMESTAMP_2121);
+
+            // check token balances after
+            const DaiBalanceAfter = await fakeDAIContract.balanceOf(owner.address);
+            const UsdcBalanceAfter = await fakeUSDCContract.balanceOf(owner.address);
+            const UsdtBalanceAfter = await fakeUSDTContract.balanceOf(owner.address);
+
             //  assert that balance of other tokens is same, while only one increases
+            expect(DaiBalanceBefore._hex).to.not.equal(DaiBalanceAfter._hex);
+            expect(UsdcBalanceBefore._hex).to.equal(UsdcBalanceAfter._hex);
+            expect(UsdtBalanceBefore._hex).to.equal(UsdtBalanceAfter._hex);
         });
 
         it("Pool should allow admin address to be changed", async function() {
@@ -228,33 +252,66 @@ describe("SwapV3-test", function () {
         });
 
         it("Pool should allow admin fee withdrawal", async function () {
-            expect(1).to.equal(0);  //fails until test is built
+            // first, conduct a few swaps to generate fees
+            const SWAP_1 = await swapflashloan.swap(0,1,"100000000000000000000",1,TIMESTAMP_2121);
+            const SWAP_2 = await swapflashloan.swap(1,2,"100000000",1,TIMESTAMP_2121);
+            const SWAP_3 = await swapflashloan.swap(2,0,"100000000",1,TIMESTAMP_2121);
+
+            // check admin token balances before claiming fees
+            const DaiBalanceBefore = await fakeDAIContract.balanceOf(owner.address);
+            const UsdcBalanceBefore = await fakeUSDCContract.balanceOf(owner.address);
+            const UsdtBalanceBefore = await fakeUSDTContract.balanceOf(owner.address);
+
+            // claim the fees
+            const CLAIM_FEES = await swapflashloan.withdrawAdminFees();
+
+            // check token balances after
+            const DaiBalanceAfter = await fakeDAIContract.balanceOf(owner.address);
+            const UsdcBalanceAfter = await fakeUSDCContract.balanceOf(owner.address);
+            const UsdtBalanceAfter = await fakeUSDTContract.balanceOf(owner.address);
+
+            /*
+            console.log(`DAI balances: ${DaiBalanceBefore}, ${DaiBalanceAfter}`);
+            console.log(`USDC balances: ${UsdcBalanceBefore}, ${UsdcBalanceAfter}`);
+            console.log(`USDT balances: ${UsdtBalanceBefore}, ${UsdtBalanceAfter}`);
+            */
+
+            // assert that after != before
+            expect(DaiBalanceBefore._hex).to.not.equal(DaiBalanceAfter._hex);
+            expect(UsdcBalanceBefore._hex).to.not.equal(UsdcBalanceAfter._hex);  
+            expect(UsdtBalanceBefore._hex).to.not.equal(UsdtBalanceAfter._hex);
         });
 
         it("Pool should allow swap fee changes", async function () {
-            expect(1).to.equal(0);  //fails until test is built
+            // get swap fee before
+            const swapStorageBefore = await swapflashloan.swapStorage();
+            const swapFeeBefore = swapStorageBefore.swapFee._hex;
+
+            // set swap fee to 0.2% (should be 0.1% initially)
+            const SET_SWAP_FEE = await swapflashloan.setSwapFee("20000000");
+
+            // get swap fee after
+            const swapStorageAfter = await swapflashloan.swapStorage();
+            const swapFeeAfter = swapStorageAfter.swapFee._hex;
+
+            // assert not equal
+            expect(swapFeeBefore).to.not.equal(swapFeeAfter);
         });
 
         it("Pool should allow admin fee changes", async function () {
-            expect(1).to.equal(0);  //fails until test is built
+            // get admin fee before
+            const swapStorageBefore = await swapflashloan.swapStorage();
+            const adminFeeBefore = swapStorageBefore.adminFee._hex;
+
+            // set admin fee to 20% (should be 10% initially)
+            const SET_ADMIN_FEE = await swapflashloan.setAdminFee("2000000000");
+
+            // get swap fee after
+            const swapStorageAfter = await swapflashloan.swapStorage();
+            const adminFeeAfter = swapStorageAfter.adminFee._hex;
+
+            // assert not equal
+            expect(adminFeeBefore).to.not.equal(adminFeeAfter);
         });
     });
-
-
-
-    // Pool allows withdrawal
-        // do withdraw
-        // check LP tokens taken away
-        // check token balances increase
-
-    // Pool allows imbalanced withdraw
-
-    // Pool allows single token withdraw
-
-    // Pool allows LP cap setting
-
-    // Pool allows admin variable changes
-
-    // Pool allows switching admin
-
 });
