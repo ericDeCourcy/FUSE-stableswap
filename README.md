@@ -98,15 +98,15 @@ Note that while the reward tokens in a schedule will not change (unless the rewa
 Contract | Address (Fuse network)
 ---|---
 USD1 Pool (`SwapFlashLoanV3.sol`) | [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions)
-USD1 LP Token | TODO
-USD1 Rewards | TODO
-USD1 SwapUtils | TODO
-USD1 AmplificationUtils | TODO
+USD1 LP Token | [`0x5c99419d48901EE803e6539c4155C2a024bEEDD3`](https://explorer.fuse.io/address/0x5c99419d48901EE803e6539c4155C2a024bEEDD3/transactions)
+USD1 Rewards | [`0x48f25aA29691968D7C2fb2b0D0c02489D4ce3154`](https://explorer.fuse.io/address/0x48f25aA29691968D7C2fb2b0D0c02489D4ce3154/transactions)
+USD1 SwapUtils | [`0x7BD853116626fC1E64BD9d3237F0262f0e0d276e`](https://explorer.fuse.io/address/0x7BD853116626fC1E64BD9d3237F0262f0e0d276e/transactions)
+USD1 AmplificationUtils | [`0xBa97D236C566CA679b1C2E7DFCF056C47B4e5BB2`](https://explorer.fuse.io/address/0xBa97D236C566CA679b1C2E7DFCF056C47B4e5BB2/transactions)
 USD2 Pool (`SwapFlashLoanV3.sol`) | [`0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD`](https://explorer.fuse.io/address/0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD/transactions)
-USD2 LP Token | TODO
-USD2 Rewards | TODO
-USD2 SwapUtils | TODO
-USD2 AmplificationUtils | TODO
+USD2 LP Token | [`0x6A5Ea3652b88a9d066094216ACa18aC58eA216f5`](https://explorer.fuse.io/address/0x6A5Ea3652b88a9d066094216ACa18aC58eA216f5/transactions)
+USD2 Rewards | [`0x9df200F086222084D86e252691d06C71480e440D`](https://explorer.fuse.io/address/0x9df200F086222084D86e252691d06C71480e440D/transactions)
+USD2 SwapUtils | [`0x1f46fA48B08Ce95D43b16C46ffA4dFFd720Bd44b`](https://explorer.fuse.io/address/0x1f46fA48B08Ce95D43b16C46ffA4dFFd720Bd44b/transactions)
+USD2 AmplificationUtils | [`0x8EcCb3D56c5b5CA9F092111060AB650a47916507`](https://explorer.fuse.io/address/0x8EcCb3D56c5b5CA9F092111060AB650a47916507/transactions)
 
 ### Contract versioning
 In this repository, you can find multiple versions of the core contracts. These are suffixed with "V1", "V2", and "V3" to indicate which other contracts should be used with them. Many contracts are mostly unchanged across versions, but new versions are created for each core contract to avoid ambiguity. Whenever a contract is deployed, it should be deployed with libraries of the same version.
