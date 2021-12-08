@@ -66,9 +66,9 @@ To switch between pools, choose the pool you want from the dropdown menu labeled
 **Deposits** are conducted in the `Deposit` tab of the interface. You can deposit `0` or more of each token into the pool you have selected. If depositing any number other than `0` for a given token, you will need to approve each token before depositing, which you will be prompted to do from the interface if you have not done so already.
 
 **Withdrawals** are conducted from the `Withdraw` tab of the interface. To conduct any withdrawal, you will need to approve the pool's LP token before withdrawing if you have not done so already. Read about the different types of withdrawal below:
-- "Balanced" withdrawals can be selected by clicking on the `Balanced Withdrawal` subtab in the interface. This will withdraw tokens at an equal proportion to what is in the pool. So, if the pool contains 100 DAI and 10 USDC and 10 USDT, you will recieve tokens in a roughly 10:1:1 DAI:USDC:USDT ratio. 
-- "Single Token" withdrawals can be selected by clicking the `Single Token Withdrawal` subtab. This will withdraw in the form of only a single token. For both balanced withdrawals and Single Token withdrawals, you specify the number of LP tokens to exchange for your withdrawn tokens. 
-- "Imbalanced" withdrawals are selected by clicking `Imbalanced Withdrawal` in the interface. These withdrawals will attempt to withdraw your desired amounts of each token, but will only succeed if your LP token balance is enough.
+- **Balanced withdrawals** can be selected by clicking on the `Balanced Withdrawal` subtab in the interface. This will withdraw tokens at an equal proportion to what is in the pool. So, if the pool contains 100 DAI and 10 USDC and 10 USDT, you will recieve tokens in a roughly 10:1:1 DAI:USDC:USDT ratio. 
+- **Single Token withdrawals** can be selected by clicking the `Single Token Withdrawal` subtab. This will withdraw in the form of only a single token. For both balanced withdrawals and Single Token withdrawals, you specify the number of LP tokens to exchange for your withdrawn tokens. 
+- **Imbalanced withdrawals** are selected by clicking `Imbalanced Withdrawal` in the interface. These withdrawals will attempt to withdraw your desired amounts of each token, but will only succeed if your LP token balance is enough.
 
 **Rewards** are automatically accrued for liquidity providers. Currently there are no rewards; they can be set up by the pool admins.
 
