@@ -59,7 +59,7 @@ Fuse Stable Swap currently (as of November 28 2021) has two pools.
 - The **USD1 Pool** swaps between DAI <> USDC <> USDT. It is deployed on Fuse network at [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions).
 - The **USD2 Pool** swaps between DAI <> fUSD <> USDT. It is deployed on Fuse network at [`0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD`](https://explorer.fuse.io/address/0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD/transactions).
 
-To switch between pools, choose the pool you want from the dropdown menu labeled "Current Pool" in the interface.
+To switch between pools, choose the pool you want from the dropdown menu labeled "Current Pool" at the top of the interface.
 
 **Swaps** are conducted by picking the token to swap from, and the token to swap to. You'll need to approve the input token, which you will be prompted to do from the interface if you have not done so already. Swaps are highly efficient and net better prices than uniswap and its forks. Prices should be close to 1:1. These can be found in the `Swap` tab of the interface.
 
