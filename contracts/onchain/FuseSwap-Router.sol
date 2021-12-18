@@ -1,7 +1,8 @@
 // File: @uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol
 // deployed on fuse network at 0xFB76e9E7d88E308aB530330eD90e84a952570319
 
-pragma solidity >=0.5.0;
+// pragma solidity >=0.5.0; // removed this for it to compile with my config
+pragma solidity 0.6.12;
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -21,7 +22,7 @@ interface IUniswapV2Factory {
 
 // File: @uniswap/lib/contracts/libraries/TransferHelper.sol
 
-pragma solidity >=0.6.0;
+//pragma solidity >=0.6.0; // removed this for it to compile with my config
 
 // helper methods for interacting with ERC20 tokens and sending ETH that do not consistently return true/false
 library TransferHelper {
@@ -51,7 +52,7 @@ library TransferHelper {
 
 // File: contracts/interfaces/IUniswapV2Router01.sol
 
-pragma solidity >=0.6.2;
+// pragma solidity >=0.6.2; // removed this for it to compile with my config
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -149,7 +150,7 @@ interface IUniswapV2Router01 {
 
 // File: contracts/interfaces/IUniswapV2Router02.sol
 
-pragma solidity >=0.6.2;
+//pragma solidity >=0.6.2; // removed this for it to compile with my config
 
 
 interface IUniswapV2Router02 is IUniswapV2Router01 {
@@ -195,7 +196,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 // File: @uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol
 
-pragma solidity >=0.5.0;
+//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -250,7 +251,7 @@ interface IUniswapV2Pair {
 
 // File: contracts/libraries/SafeMath.sol
 
-pragma solidity =0.6.6;
+//pragma solidity =0.6.6; // removed this for it to compile with my config
 
 // a library for performing overflow-safe math, courtesy of DappHub (https://github.com/dapphub/ds-math)
 
@@ -270,7 +271,7 @@ library SafeMath {
 
 // File: contracts/libraries/UniswapV2Library.sol
 
-pragma solidity >=0.5.0;
+//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 
 
@@ -353,7 +354,7 @@ library UniswapV2Library {
 
 // File: contracts/interfaces/IERC20.sol
 
-pragma solidity >=0.5.0;
+// pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -373,7 +374,7 @@ interface IERC20 {
 
 // File: contracts/interfaces/IWETH.sol
 
-pragma solidity >=0.5.0;
+//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 interface IWETH {
     function deposit() external payable;
@@ -383,7 +384,7 @@ interface IWETH {
 
 // File: contracts/UniswapV2Router02.sol
 
-pragma solidity =0.6.6;
+//pragma solidity =0.6.6; // removed this for it to compile with my config
 
 
 
