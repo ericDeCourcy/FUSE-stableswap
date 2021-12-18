@@ -19,6 +19,7 @@ describe("SwapV3-test", function () {
     let fakeDAIContract;
     let fakeUSDCContract;
     let fakeUSDTContract;
+    let rewardsContract;
 
     // test that does nothing should pass with no errors
     it("Test which does nothing should pass", async function() {
@@ -72,8 +73,6 @@ describe("SwapV3-test", function () {
         // admin fee should be 10e9 because thats 10% - this means 10% of 0.1%... so admin gets 0.01% of each trade, LPs get 0.09% 
         const INIT_STANDALONE = await swapflashloan.initialize([fakeDAIContract.address, fakeUSDCContract.address, fakeUSDTContract.address], [18, 6, 6], "FSS-FAKE-DAI-USDC-USDT-V3", "LP-FAKE-USD-V3", 100, 10000000, 1000000000, lptoken.address, lprewards.address);
         
-       
-
         // get some fake tokens
         const DAI_MINT = await fakeDAIContract.mintPreset();
         const USDC_MINT = await fakeUSDCContract.mintPreset();
@@ -89,6 +88,10 @@ describe("SwapV3-test", function () {
 
         // deposit some liquidity (100,100,100)
         const DEPOSIT = await swapflashloan.addLiquidity(["100000000000000000000","100000000","100000000"],1,TIMESTAMP_2121);
+    
+        const rewardToken = await swapflashloan.lpRewardsAddress();
+
+        rewardsContract = await LPRewards.attach(rewardToken);
     });
 
     describe("Deployment", function () {
@@ -104,12 +107,8 @@ describe("SwapV3-test", function () {
         });
 
         it("Owner of rewards should be msg.sender", async function() {
-            const rewardToken = await swapflashloan.lpRewardsAddress();
 
-            const LPRewards = await ethers.getContractFactory("LPRewardsV3");
-            const rewardTokenInstance = await LPRewards.attach(rewardToken);
-
-            const rewardTokenOwner = await rewardTokenInstance.owner();
+            const rewardTokenOwner = await rewardsContract.owner();
 
             expect(rewardTokenOwner).to.equal(owner.address);
         });
