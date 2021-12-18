@@ -10,7 +10,7 @@ require("@nomiclabs/hardhat-web3");
 
 
 // private key link
-const { privateKey, honeypotPrivateKey, haxorPrivateKey } = require('./secrets.json');
+const {privateKey} = require('./secrets.json');
 
 // etherscan plugin
 require("@nomiclabs/hardhat-etherscan");
