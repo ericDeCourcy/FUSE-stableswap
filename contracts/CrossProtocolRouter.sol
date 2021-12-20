@@ -417,7 +417,7 @@ interface IWETH {
 
 
 
-abstract contract UniswapV2Router02 is IUniswapV2Router02 {
+abstract contract CrossProtocolRouter is IUniswapV2Router02 {
     using SafeMath for uint;
 
     address public immutable override factory;
@@ -620,6 +620,28 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
     function _swap(uint[] memory amounts, address[] memory path, address[] stableSwapPool, address _to) internal virtual {
         for (uint i; i < path.length - 1; i++) {
             
+            address to;
+
+            // Determine `to` based on the i+2 step. This is regardless of whether current step goes
+            // through stablesSwap
+            // if i == path.length-2, to becomes _to since we are on the last step
+            if(i == path.length -2)
+            {
+                to = _to;
+            }
+            else // else 
+            {
+                // if i+2 step is stableswap, to becomes that swap's holder
+                if(stableSwapPool[i+2] != address(0))
+                {
+                    to = getHolderFor(stableSwapPool[i+2]);
+                }
+                else // i+2 step is fuseSwap pool - get it's address
+                {
+                    to = CrossProtocolSwapLibrary.pairFor(factory, output, path[i + 2]);
+                }
+            }
+
             if(stableSwapPool[i+1] != address(0))   // if this step goes thru stableswap...
             {
                /** 
@@ -638,12 +660,13 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
                 uint256 minDy = 0;
 
                 // assume the funds are already in the "holder"
-                IStableSwapHolder(getHolder(stableSwapPool[i+1])).swap(
+                IStableSwapHolder(getHolderFor(stableSwapPool[i+1])).swap(
                     indexIn, 
                     indexOut, 
-                    IERC20(path[i]).balanceOf(getHolder(stableSwapPool[i+1])),
-                    minDy
-                    //avoid passing deadline to save some gas
+                    IERC20(path[i]).balanceOf(getHolderFor(stableSwapPool[i+1])),
+                    minDy,
+                    //avoid passing deadline to save some gas,
+                    to
                 );
 
             }
@@ -653,9 +676,6 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
                 (address token0,) = CrossProtocolSwapLibrary.sortTokens(input, output);
                 uint amountOut = amounts[i + 1];
                 (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
-
-                // TODO: the "To" setting needs changed, in case the next step is a stableswap step. Otherwise it will send to the uniswap pool for the two tokens
-                address to = i < path.length - 2 ? CrossProtocolSwapLibrary.pairFor(factory, output, path[i + 2]) : _to;
                 IUniswapV2Pair(CrossProtocolSwapLibrary.pairFor(factory, input, output)).swap(
                     amount0Out, amount1Out, to, new bytes(0)
                 );
@@ -685,13 +705,11 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
         
         require(amounts[amounts.length - 1] >= amountOutMin, 'CrossProtocolRouter: INSUFFICIENT_OUTPUT_AMOUNT');
         
-        // TODO: need to determine if first step is stableswapping, and if so then do something different...?
-            // don't think we need to transfer to the pair if first step is stableswapping
         // if first step is stableswap, transfer to stableswap's "holder" contract
         if(stableSwapPool[1] != address(0)) // if stableswap is first step
         {
             TransferHelper.safeTransferFrom(
-                path[0], msg.sender, getHolder(stableSwapPool[i+1]), amounts[0]
+                path[0], msg.sender, getHolderFor(stableSwapPool[i+1]), amounts[0]
             );
         }
         // otherwise transfer to fuseswap pool
@@ -701,7 +719,7 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
                 path[0], msg.sender, CrossProtocolSwapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
             );
         }
-        
+
         _swap(amounts, path, to);
     }
     function swapTokensForExactTokens(
@@ -914,5 +932,18 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
         returns (uint[] memory amounts)
     {
         return CrossProtocolSwapLibrary.getAmountsIn(factory, amountOut, path);
+    }
+
+    function getHolderFor(address stableSwapPool)
+        public
+        view
+        returns (address holder)
+    {
+        address holder = holders[stableSwapPool]; 
+        if(holder == 0)
+        {
+            return stableSwapPool;
+        }
+        return holder;
     }
 }
