@@ -617,27 +617,49 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
 
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
-    function _swap(uint[] memory amounts, address[] memory path, address _to) internal virtual {
+    function _swap(uint[] memory amounts, address[] memory path, address[] stableSwapPool, address _to) internal virtual {
         for (uint i; i < path.length - 1; i++) {
-            // TODO: create a case for swapping with stableswap
-            /** 
-             * 1. check for "pool" address for stableswap. If not 0, we are using stableswap
-             * 2. get indexIn
-             * 3. get indexOut
-             * 4. get minDy...? or just make one up...? //TODO: how does this router handle that? 
-             * 5. get deadline
-             * 6. check if token in has been approved. If not, approve it
-             * 7. make a swap() call
-             */
             
-            (address input, address output) = (path[i], path[i + 1]);
-            (address token0,) = CrossProtocolSwapLibrary.sortTokens(input, output);
-            uint amountOut = amounts[i + 1];
-            (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
-            address to = i < path.length - 2 ? CrossProtocolSwapLibrary.pairFor(factory, output, path[i + 2]) : _to;
-            IUniswapV2Pair(CrossProtocolSwapLibrary.pairFor(factory, input, output)).swap(
-                amount0Out, amount1Out, to, new bytes(0)
-            );
+            if(stableSwapPool[i+1] != address(0))   // if this step goes thru stableswap...
+            {
+               /** 
+                * 1. get indexIn
+                * 2. get indexOut
+                * 3. get minDy...? or just make one up...? //TODO: how does this router handle that? 
+                * 4. get deadline
+                * 5. transfer to the holder contract
+                * 6. make a swap() call. Call MUST send tokens on to next stage in swap
+                */
+
+                uint256 indexIn = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
+                uint256 indexOut = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
+
+                // since we are doing exact-to-whatever, we don't care too much about the predicted output
+                uint256 minDy = 0;
+
+                // assume the funds are already in the "holder"
+                IStableSwapHolder(getHolder(stableSwapPool[i+1])).swap(
+                    indexIn, 
+                    indexOut, 
+                    IERC20(path[i]).balanceOf(getHolder(stableSwapPool[i+1])),
+                    minDy
+                    //avoid passing deadline to save some gas
+                );
+
+            }
+            else //this step goes through uniswap
+            {
+                (address input, address output) = (path[i], path[i + 1]);
+                (address token0,) = CrossProtocolSwapLibrary.sortTokens(input, output);
+                uint amountOut = amounts[i + 1];
+                (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
+
+                // TODO: the "To" setting needs changed, in case the next step is a stableswap step. Otherwise it will send to the uniswap pool for the two tokens
+                address to = i < path.length - 2 ? CrossProtocolSwapLibrary.pairFor(factory, output, path[i + 2]) : _to;
+                IUniswapV2Pair(CrossProtocolSwapLibrary.pairFor(factory, input, output)).swap(
+                    amount0Out, amount1Out, to, new bytes(0)
+                );
+            }
         }
     }
 
@@ -655,18 +677,31 @@ abstract contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
+        
+        // getAmountsOut has been upated to interface with stableswap pool when needed
         amounts = CrossProtocolSwapLibrary.getAmountsOut(factory, amountIn, path, stableSwapPool); //getAmountsOut contains an edit.
         // TODO: make sure we are calling into OUR version of UniswapV2Library rather than any deployed version
         // consider changing name to CrossProtocolSwapLibrary or something
         
-        require(amounts[amounts.length - 1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amounts[amounts.length - 1] >= amountOutMin, 'CrossProtocolRouter: INSUFFICIENT_OUTPUT_AMOUNT');
         
         // TODO: need to determine if first step is stableswapping, and if so then do something different...?
             // don't think we need to transfer to the pair if first step is stableswapping
-        TransferHelper.safeTransferFrom(
-            path[0], msg.sender, CrossProtocolSwapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
-        );
-
+        // if first step is stableswap, transfer to stableswap's "holder" contract
+        if(stableSwapPool[1] != address(0)) // if stableswap is first step
+        {
+            TransferHelper.safeTransferFrom(
+                path[0], msg.sender, getHolder(stableSwapPool[i+1]), amounts[0]
+            );
+        }
+        // otherwise transfer to fuseswap pool
+        else 
+        {
+            TransferHelper.safeTransferFrom(
+                path[0], msg.sender, CrossProtocolSwapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
+            );
+        }
+        
         _swap(amounts, path, to);
     }
     function swapTokensForExactTokens(
