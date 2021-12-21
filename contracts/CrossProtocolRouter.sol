@@ -7,8 +7,9 @@
 */ 
 
 import "./interfaces/ISwapFlashLoanV3.sol";
+import "./interfaces/IStableSwapHolder.sol";
+import "./contracts-v3_4/access/Ownable.sol";
 
-// pragma solidity >=0.5.0; // removed this for it to compile with my config
 pragma solidity 0.6.12;
 
 interface IUniswapV2Factory {
@@ -29,7 +30,6 @@ interface IUniswapV2Factory {
 
 // File: @uniswap/lib/contracts/libraries/TransferHelper.sol
 
-//pragma solidity >=0.6.0; // removed this for it to compile with my config
 
 // helper methods for interacting with ERC20 tokens and sending ETH that do not consistently return true/false
 library TransferHelper {
@@ -59,7 +59,6 @@ library TransferHelper {
 
 // File: contracts/interfaces/IUniswapV2Router01.sol
 
-// pragma solidity >=0.6.2; // removed this for it to compile with my config
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -158,7 +157,6 @@ interface IUniswapV2Router01 {
 
 // File: contracts/interfaces/IUniswapV2Router02.sol
 
-//pragma solidity >=0.6.2; // removed this for it to compile with my config
 
 
 interface IUniswapV2Router02 is IUniswapV2Router01 {
@@ -204,7 +202,6 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 // File: @uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol
 
-//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -259,7 +256,6 @@ interface IUniswapV2Pair {
 
 // File: contracts/libraries/SafeMath.sol
 
-//pragma solidity =0.6.6; // removed this for it to compile with my config
 
 // a library for performing overflow-safe math, courtesy of DappHub (https://github.com/dapphub/ds-math)
 
@@ -282,7 +278,6 @@ library SafeMath {
 
 // File: contracts/libraries/UniswapV2Library.sol
 
-//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 
 
@@ -352,7 +347,7 @@ library CrossProtocolSwapLibrary {  //Note: changed from UniswapV2Library to thi
             {
                 uint8 tokenIndexIn = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
                 uint8 tokenIndexOut = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i+1]);
-                amounts[i+1] = ISwapFlashLoanV3(stableSwapPool[i+1]).calculateSwap(tokenIndexIn, uint256(tokenIndexOut), uint256(amounts[i]));
+                amounts[i+1] = ISwapFlashLoanV3(stableSwapPool[i+1]).calculateSwap(tokenIndexIn, tokenIndexOut, amounts[i]);
             }
             else
             {            
@@ -376,7 +371,6 @@ library CrossProtocolSwapLibrary {  //Note: changed from UniswapV2Library to thi
 
 // File: contracts/interfaces/IERC20.sol
 
-// pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 /* //TODO: removed this because identifier already used in ISwapFlashLoanV3. Check that interfaces are identical or any differences won't cause problems
 interface IERC20 {
@@ -398,7 +392,6 @@ interface IERC20 {
 
 // File: contracts/interfaces/IWETH.sol
 
-//pragma solidity >=0.5.0; // removed this for it to compile with my config
 
 interface IWETH {
     function deposit() external payable;
@@ -408,20 +401,16 @@ interface IWETH {
 
 // File: contracts/UniswapV2Router02.sol
 
-//pragma solidity =0.6.6; // removed this for it to compile with my config
 
-
-
-
-
-
-
-
-abstract contract CrossProtocolRouter is IUniswapV2Router02 {
+abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
     using SafeMath for uint;
 
     address public immutable override factory;
     address public immutable override WETH;
+
+    mapping(address => address) public holders;
+
+
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
@@ -617,7 +606,7 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02 {
 
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
-    function _swap(uint[] memory amounts, address[] memory path, address[] stableSwapPool, address _to) internal virtual {
+    function _swap(uint[] memory amounts, address[] memory path, address[] memory stableSwapPool, address _to) internal virtual {
         for (uint i; i < path.length - 1; i++) {
             
             address to;
@@ -638,7 +627,7 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02 {
                 }
                 else // i+2 step is fuseSwap pool - get it's address
                 {
-                    to = CrossProtocolSwapLibrary.pairFor(factory, output, path[i + 2]);
+                    to = CrossProtocolSwapLibrary.pairFor(factory, path[i+1], path[i + 2]);
                 }
             }
 
@@ -709,7 +698,7 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02 {
         if(stableSwapPool[1] != address(0)) // if stableswap is first step
         {
             TransferHelper.safeTransferFrom(
-                path[0], msg.sender, getHolderFor(stableSwapPool[i+1]), amounts[0]
+                path[0], msg.sender, getHolderFor(stableSwapPool[1]), amounts[0]
             );
         }
         // otherwise transfer to fuseswap pool
@@ -720,21 +709,22 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02 {
             );
         }
 
-        _swap(amounts, path, to);
+        _swap(amounts, path, stableSwapPool, to);
     }
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
         address[] calldata path,
+        address[] calldata stableSwapPool,
         address to,
         uint deadline
-    ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
+    ) external virtual ensure(deadline) returns (uint[] memory amounts) {
         amounts = CrossProtocolSwapLibrary.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, CrossProtocolSwapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
         );
-        _swap(amounts, path, to);
+        _swap(amounts, path, stableSwapPool, to);
     }
 
     /*
@@ -940,10 +930,19 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02 {
         returns (address holder)
     {
         address holder = holders[stableSwapPool]; 
-        if(holder == 0)
+        if(holder == address(0))
         {
             return stableSwapPool;
         }
         return holder;
+    }
+
+    function addToHolders(address stableSwapPool, address holder)
+        public
+        onlyOwner
+    {
+        require(holders[stableSwapPool] != address(0), "Pool has already been assigned a holder");
+
+        holders[stableSwapPool] = holder;
     }
 }
