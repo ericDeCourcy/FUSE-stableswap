@@ -1,8 +1,6 @@
-// TODO: make sure that everything here says "V3" instead of "V1" or "V2"
-
 async function main() {
 
-  const timeout = 5000; //TODO: change back to 25k for fusenut deploy
+  const timeout = 5000; //TODO: change back to 25k for fusenet deploy
 
   const owner = await ethers.getSigners();
 
@@ -146,33 +144,7 @@ async function main() {
 
   await new Promise(r => setTimeout(r, timeout));
 
-  // We need to approve the LP token to be transferred before removing liquidity
-  /* const THISLPTOKEN = await ethers.getContractFactory("LPTokenV1");
-   const thisLpToken = await THISLPTOKEN.attach(INIT);
-   thisLpToken.approve(swapflashloan.address, 99999999999999999999999999);
-   console.log("approving lp tokens for burn");
-   
-   await new Promise(r => setTimeout(r, timeout));
-   
-   // remove liquidity regular
-   await swapflashloan.removeLiquidity("1000000000000000000", [1,1,1], 1659586065);
-   console.log("calling removeLiquidity");
-   
-   await new Promise(r => setTimeout(r, timeout));
-   
-   // remove liquidity one token
-   await swapflashloan.removeLiquidityOneToken(100,1,1,1659586065);
-   console.log("calling removeLiquidityOneToken");
-   
-   await new Promise(r => setTimeout(r, timeout));
-   
-   // remove liquidity imbalanced'ly
-   // [1,2,3] are the proportions
-   // we say max burn amount is 10 lp tokens so 10e18
-   await swapflashloan.removeLiquidityImbalance(["1000000000000000000",2000000,3000000],"10000000000000000000",1659586065);
-   console.log("calling removeLiquidityImbalance");
-   
-   await new Promise(r => setTimeout(r, timeout)); */
+  
 
   // swap 5 dai for USDC
   const swapAction = await swapflashloan.swap(0, 1, "5000000000000000000", 1, 1659586065);

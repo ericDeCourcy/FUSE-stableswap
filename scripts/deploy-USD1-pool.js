@@ -1,5 +1,3 @@
-// TODO: make sure that everything here says "V3" instead of "V1" or "V2"
-
 async function main() {
 
   const timeout = 25000;

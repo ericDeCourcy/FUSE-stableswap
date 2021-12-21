@@ -9,6 +9,7 @@
 import "./interfaces/ISwapFlashLoanV3.sol";
 import "./interfaces/IStableSwapHolder.sol";
 import "./contracts-v3_4/access/Ownable.sol";
+import "./interfaces/IRoutableSwapWrapper.sol";
 
 pragma solidity 0.6.12;
 
@@ -122,7 +123,7 @@ interface IUniswapV2Router01 {
         uint amountIn,
         uint amountOutMin,
         address[] calldata path,
-        address[] calldata stableSwapPool,
+        address[] calldata routableSwapWrappers,
         address to,
         uint deadline
     ) external returns (uint[] memory amounts);
@@ -337,17 +338,15 @@ library CrossProtocolSwapLibrary {  //Note: changed from UniswapV2Library to thi
     }
 
     // performs chained getAmountOut calculations on any number of pairs
-    function getAmountsOut(address factory, uint amountIn, address[] memory path, address[] memory stableSwapPool) internal view returns (uint[] memory amounts) {
+    function getAmountsOut(address factory, uint amountIn, address[] memory path, address[] memory routableSwapWrappers) internal view returns (uint[] memory amounts) {
         require(path.length >= 2, 'CrossProtocolSwapLibrary: INVALID_PATH');
         amounts = new uint[](path.length);
         amounts[0] = amountIn;
         for (uint i; i < path.length - 1; i++) {
             
-            if(stableSwapPool[i+1] != address(0))   // if there is a stableswap pool address passed in
+            if(routableSwapWrappers[i+1] != address(0))   // if there is a stableswap pool address passed in
             {
-                uint8 tokenIndexIn = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
-                uint8 tokenIndexOut = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i+1]);
-                amounts[i+1] = ISwapFlashLoanV3(stableSwapPool[i+1]).calculateSwap(tokenIndexIn, tokenIndexOut, amounts[i]);
+                amounts[i + 1] = IRoutableSwapWrapper(routableSwapWrappers[i+1]).getAmountOut(path[i], path[i+1], amounts[i]);
             }
             else
             {            
@@ -606,24 +605,24 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
 
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
-    function _swap(uint[] memory amounts, address[] memory path, address[] memory stableSwapPool, address _to) internal virtual {
+    function _swap(uint[] memory amounts, address[] memory path, address[] memory routableSwapWrappers, address _to) internal virtual {
         for (uint i; i < path.length - 1; i++) {
             
             address to;
 
             // Determine `to` based on the i+2 step. This is regardless of whether current step goes
             // through stablesSwap
-            // if i == path.length-2, to becomes _to since we are on the last step
+            // if i == path.length-2, we are on the last step. 'to' becomes _to 
             if(i == path.length -2)
             {
                 to = _to;
             }
-            else // else 
+            else // else (not on last step)
             {
-                // if i+2 step is stableswap, to becomes that swap's holder
-                if(stableSwapPool[i+2] != address(0))
+                // if i+2 step is stableswap, 'to' becomes that swap's RoutableSwapWrapper
+                if(routableSwapWrappers[i+2] != address(0))
                 {
-                    to = getHolderFor(stableSwapPool[i+2]);
+                    to = routableSwapWrappers[i+2];
                 }
                 else // i+2 step is fuseSwap pool - get it's address
                 {
@@ -631,30 +630,18 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
                 }
             }
 
-            if(stableSwapPool[i+1] != address(0))   // if this step goes thru stableswap...
+            if(routableSwapWrappers[i+1] != address(0))   // if this step goes thru stableswap...
             {
-               /** 
-                * 1. get indexIn
-                * 2. get indexOut
-                * 3. get minDy...? or just make one up...? //TODO: how does this router handle that? 
-                * 4. get deadline
-                * 5. transfer to the holder contract
-                * 6. make a swap() call. Call MUST send tokens on to next stage in swap
-                */
+                // make a swap() call. Call MUST send tokens on to next stage in swap
 
-                uint256 indexIn = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
-                uint256 indexOut = ISwapFlashLoanV3(stableSwapPool[i+1]).getTokenIndex(path[i]);
-
-                // since we are doing exact-to-whatever, we don't care too much about the predicted output
-                uint256 minDy = 0;
+                // TODO: Make sure first step would have sent tokens here
+                // TODO: make sure if not first step, tokens would have gotten sent to the routableSwapWrapper contract
 
                 // assume the funds are already in the "holder"
-                IStableSwapHolder(getHolderFor(stableSwapPool[i+1])).swap(
-                    indexIn, 
-                    indexOut, 
-                    IERC20(path[i]).balanceOf(getHolderFor(stableSwapPool[i+1])),
-                    minDy,
-                    //avoid passing deadline to save some gas,
+                IRoutableSwapWrapper(routableSwapWrappers[i+1]).swap(
+                    path[i], 
+                    path[i+1],
+                    amounts[i],  // TODO: should this be amounts[i+1]? I think this is fine, since we're passing in the amount we should have before the swap
                     to
                 );
 
@@ -674,31 +661,31 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
 
 
     /**
-     * @param stableSwapPool At index "x", the address of the pool needed to conduct the swap to get 
-     *      from path[x-1] to path[x] tokens. It should be address(0) whenever a swap should be sent
-     *      through fuseSwap.
+     * @param routableSwapWrappers At index "x", the address of the routableSwapWrapper contract 
+     *      needed to conduct the swap to get from path[x-1] to path[x] tokens. It should be address(0)
+     *      whenever a swap should be sent through fuseSwap. routableSwapWrappers[0] should == 0
      */
     function swapExactTokensForTokens(
         uint amountIn,
         uint amountOutMin,
         address[] calldata path,
-        address[] calldata stableSwapPool,
+        address[] calldata routableSwapWrappers,
         address to,
         uint deadline
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         
+        require(routableSwapWrappers[0] == address(0), "CrossProtocolRouter: routableSwapWrapper[0] should be address(0)");
+
         // getAmountsOut has been upated to interface with stableswap pool when needed
-        amounts = CrossProtocolSwapLibrary.getAmountsOut(factory, amountIn, path, stableSwapPool); //getAmountsOut contains an edit.
-        // TODO: make sure we are calling into OUR version of UniswapV2Library rather than any deployed version
-        // consider changing name to CrossProtocolSwapLibrary or something
+        amounts = CrossProtocolSwapLibrary.getAmountsOut(factory, amountIn, path, routableSwapWrappers); 
         
         require(amounts[amounts.length - 1] >= amountOutMin, 'CrossProtocolRouter: INSUFFICIENT_OUTPUT_AMOUNT');
         
         // if first step is stableswap, transfer to stableswap's "holder" contract
-        if(stableSwapPool[1] != address(0)) // if stableswap is first step
+        if(routableSwapWrappers[1] != address(0)) // if stableswap is first step
         {
             TransferHelper.safeTransferFrom(
-                path[0], msg.sender, getHolderFor(stableSwapPool[1]), amounts[0]
+                path[0], msg.sender, routableSwapWrappers[1], amounts[0]
             );
         }
         // otherwise transfer to fuseswap pool
@@ -709,13 +696,13 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
             );
         }
 
-        _swap(amounts, path, stableSwapPool, to);
+        _swap(amounts, path, routableSwapWrappers, to);
     }
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
         address[] calldata path,
-        address[] calldata stableSwapPool,
+        address[] calldata routableSwapWrappers,
         address to,
         uint deadline
     ) external virtual ensure(deadline) returns (uint[] memory amounts) {
@@ -724,7 +711,7 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, CrossProtocolSwapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
         );
-        _swap(amounts, path, stableSwapPool, to);
+        _swap(amounts, path, routableSwapWrappers, to);
     }
 
     /*
@@ -904,14 +891,14 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
         return CrossProtocolSwapLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
-    function getAmountsOut(uint amountIn, address[] memory path, address[] memory stableSwapPool)
+    function getAmountsOut(uint amountIn, address[] memory path, address[] memory routableSwapWrappers)
         public
         view
         virtual
         /*override*/
         returns (uint[] memory amounts)
     {
-        return CrossProtocolSwapLibrary.getAmountsOut(factory, amountIn, path, stableSwapPool);
+        return CrossProtocolSwapLibrary.getAmountsOut(factory, amountIn, path, routableSwapWrappers);
     }
 
     function getAmountsIn(uint amountOut, address[] memory path)
@@ -922,27 +909,5 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
         returns (uint[] memory amounts)
     {
         return CrossProtocolSwapLibrary.getAmountsIn(factory, amountOut, path);
-    }
-
-    function getHolderFor(address stableSwapPool)
-        public
-        view
-        returns (address holder)
-    {
-        address holder = holders[stableSwapPool]; 
-        if(holder == address(0))
-        {
-            return stableSwapPool;
-        }
-        return holder;
-    }
-
-    function addToHolders(address stableSwapPool, address holder)
-        public
-        onlyOwner
-    {
-        require(holders[stableSwapPool] != address(0), "Pool has already been assigned a holder");
-
-        holders[stableSwapPool] = holder;
     }
 }
