@@ -341,7 +341,7 @@ contract SwapV3 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
      * pooled token's native precision. If a token charges a fee on transfers,
      * use the amount that gets transferred after the fee.
      * @param deposit whether this is a deposit or a withdrawal
-     * @return token amount the user will receive
+     * @return token amount the user will receive or pay
      */
     function calculateTokenAmount(
         address account,

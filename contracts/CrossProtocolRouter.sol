@@ -698,6 +698,10 @@ abstract contract CrossProtocolRouter is IUniswapV2Router02, Ownable {
 
         _swap(amounts, path, routableSwapWrappers, to);
     }
+
+    // TODO: what is the difference between swapExact... and swapTokens...?
+        // it calls 'getAmountsIn' rather than 'getAmountsOut', and it checks that amounts[0] is below some max
+    // TODO: natspec
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
