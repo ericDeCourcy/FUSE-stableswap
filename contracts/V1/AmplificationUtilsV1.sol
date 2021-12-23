@@ -2,15 +2,15 @@
 
 pragma solidity 0.6.12;
 
-import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
-import "./SwapUtilsV3.sol";
+import "../contracts-v3_4/token/ERC20/SafeERC20.sol";
+import "./SwapUtilsV1.sol";
 
 /**
  * @title AmplificationUtils library
  * @notice A library to calculate and ramp the A parameter of a given `SwapUtils.Swap` struct.
  * This library assumes the struct is fully validated.
  */
-library AmplificationUtilsV3 {
+library AmplificationUtilsV1 {
     using SafeMath for uint256;
 
     event RampA(
@@ -33,7 +33,7 @@ library AmplificationUtilsV3 {
      * @param self Swap struct to read from
      * @return A parameter
      */
-    function getA(SwapUtilsV3.Swap storage self)
+    function getA(SwapUtilsV1.Swap storage self)
         external
         view
         returns (uint256)
@@ -47,7 +47,7 @@ library AmplificationUtilsV3 {
      * @param self Swap struct to read from
      * @return A parameter in its raw precision form
      */
-    function getAPrecise(SwapUtilsV3.Swap storage self)
+    function getAPrecise(SwapUtilsV1.Swap storage self)
         external
         view
         returns (uint256)
@@ -61,7 +61,7 @@ library AmplificationUtilsV3 {
      * @param self Swap struct to read from
      * @return A parameter in its raw precision form
      */
-    function _getAPrecise(SwapUtilsV3.Swap storage self)
+    function _getAPrecise(SwapUtilsV1.Swap storage self)
         internal
         view
         returns (uint256)
@@ -99,7 +99,7 @@ library AmplificationUtilsV3 {
      * @param futureTime_ timestamp when the new A should be reached
      */
     function rampA(
-        SwapUtilsV3.Swap storage self,
+        SwapUtilsV1.Swap storage self,
         uint256 futureA_,
         uint256 futureTime_
     ) external {
@@ -149,7 +149,7 @@ library AmplificationUtilsV3 {
      * cannot be called for another 24 hours
      * @param self Swap struct to update
      */
-    function stopRampA(SwapUtilsV3.Swap storage self) external {
+    function stopRampA(SwapUtilsV1.Swap storage self) external {
         require(self.futureATime > block.timestamp, "Ramp is already stopped");
 
         uint256 currentA = _getAPrecise(self);

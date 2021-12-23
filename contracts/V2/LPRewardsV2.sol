@@ -1,14 +1,11 @@
-// TODO: make sure that rewards will accrue correctly for an account that is inactive for the entirety of a rewards distibution.
-    // for example, someone deposits and never again touches their account. Then, a reward cycle starts then ends
-
 pragma solidity 0.6.12;
 
-import "./contracts-v3_4/math/Math.sol";
-import "./contracts-v3_4/math/SafeMath.sol";
-import "./contracts-upgradeable-v3_4/access/OwnableUpgradeable.sol";
-import "./contracts-v3_4/token/ERC20/IERC20.sol";
+import "../contracts-v3_4/math/Math.sol";
+import "../contracts-v3_4/math/SafeMath.sol";
+import "../contracts-upgradeable-v3_4/access/OwnableUpgradeable.sol";
+import "../contracts-v3_4/token/ERC20/IERC20.sol";
 
-contract LPRewardsV3 is OwnableUpgradeable{
+contract LPRewardsV2 is OwnableUpgradeable{
     using SafeMath for uint256;
 
     struct Reward {
@@ -57,7 +54,7 @@ contract LPRewardsV3 is OwnableUpgradeable{
     }
 
     // @notice Updates all reward token accruals for a given account
-    // @dev This should be called by the SwapV3 contract whenever LPToken balance changes occur
+    // @dev This should be called by the SwapV2 contract whenever LPToken balance changes occur
     function updateAllRewards(address _account) external {
         for(uint x = 0; x < numRewardTokens; x++ )
         {

@@ -3,13 +3,13 @@
 pragma solidity 0.6.12;
 
 //import "./contracts-v3_4/math/SafeMath.sol"; //removed since already present in SafeERC20.sol
-import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
-import "./contracts-v3_4/proxy/Clones.sol";
-import "./contracts-upgradeable-v3_4/utils/ReentrancyGuardUpgradeable.sol";
-import "./OwnerPausableUpgradeable.sol";
-import "./SwapUtilsV2.sol";
-import "./AmplificationUtilsV2.sol";
-import "./LPRewardsV2.sol";
+import "../contracts-v3_4/token/ERC20/SafeERC20.sol";
+import "../contracts-v3_4/proxy/Clones.sol";
+import "../contracts-upgradeable-v3_4/utils/ReentrancyGuardUpgradeable.sol";
+import "../OwnerPausableUpgradeable.sol";
+import "./SwapUtilsV3.sol";
+import "./AmplificationUtilsV3.sol";
+import "./LPRewardsV3.sol";
 
 /**ext:sol
  * @title Swap - A StableSwap implementation in solidity.
@@ -32,15 +32,18 @@ import "./LPRewardsV2.sol";
  // Only difference between V1 and V2 is that V2 incorporates rewards staking.
  //     - V2 deploys a rewards contract from which users can claim rewards
  //     - V2 hooks into said rewards contract every time an LP token balance changes
-contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
+ // TODO: remove this abovE?
+ //
+ // V3 differs from V2 in that it implements a "cap" for the number of LP tokens in circulation which can be adjusted by the pool owner
+contract SwapV3 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    using SwapUtilsV2 for SwapUtilsV2.Swap;
-    using AmplificationUtilsV2 for SwapUtilsV2.Swap;
+    using SwapUtilsV3 for SwapUtilsV3.Swap;
+    using AmplificationUtilsV3 for SwapUtilsV3.Swap;
 
     // Struct storing data responsible for automatic market maker functionalities. In order to
-    // access this data, this contract uses SwapUtils library. For more details, see SwapUtilsV1.sol
-    SwapUtilsV2.Swap public swapStorage;
+    // access this data, this contract uses SwapUtils library. For more details, see SwapUtilsV3.sol
+    SwapUtilsV3.Swap public swapStorage;
 
     // Maps token address to an index in the pool. Used to prevent duplicate tokens in the pool.
     // getTokenIndex function also relies on this mapping to retrieve token index.
@@ -122,7 +125,6 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _a,
         uint256 _fee,
         uint256 _adminFee,
-        //uint256 _withdrawFee, // TODO-POSTV2: remove all mentions of withdrawfee
         address lpTokenTargetAddress,
         address lpRewardsTargetAddress
     ) public virtual initializer returns(address newLpToken){
@@ -152,34 +154,34 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
                 "The 0 address isn't an ERC-20"
             );
             require(
-                decimals[i] <= SwapUtilsV2.POOL_PRECISION_DECIMALS,
+                decimals[i] <= SwapUtilsV3.POOL_PRECISION_DECIMALS,
                 "Token decimals exceeds max"
             );
             precisionMultipliers[i] =
                 10 **
-                    uint256(SwapUtilsV2.POOL_PRECISION_DECIMALS).sub(
+                    uint256(SwapUtilsV3.POOL_PRECISION_DECIMALS).sub(
                         uint256(decimals[i])
                     );
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
 
         // Check _a, _fee, _adminFee, _withdrawFee parameters
-        require(_a < AmplificationUtilsV2.MAX_A, "_a exceeds maximum");
-        require(_fee < SwapUtilsV2.MAX_SWAP_FEE, "_fee exceeds maximum");
+        require(_a < AmplificationUtilsV3.MAX_A, "_a exceeds maximum");
+        require(_fee < SwapUtilsV3.MAX_SWAP_FEE, "_fee exceeds maximum");
         require(
-            _adminFee < SwapUtilsV2.MAX_ADMIN_FEE,
+            _adminFee < SwapUtilsV3.MAX_ADMIN_FEE,
             "_adminFee exceeds maximum"
         );
 
         // Clone and initialize a LPToken contract
-        LPTokenV2 lpToken = LPTokenV2(Clones.clone(lpTokenTargetAddress));
+        LPTokenV3 lpToken = LPTokenV3(Clones.clone(lpTokenTargetAddress));
         require(
             lpToken.initialize(lpTokenName, lpTokenSymbol),
             "could not init lpToken clone"
         );
 
         // Clone and initialize a LPRewards contract
-        LPRewardsV2 lpRewards = LPRewardsV2(Clones.clone(lpRewardsTargetAddress));
+        LPRewardsV3 lpRewards = LPRewardsV3(Clones.clone(lpRewardsTargetAddress));
         lpRewardsAddress = address(lpRewards);
         require(
             lpRewards.initialize(address(lpToken), tx.origin),  //Note: ownership is transferred to tx.origin - this will give ownership of the rewards contract to the sender who created this pool
@@ -197,13 +199,16 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         swapStorage.pooledTokens = _pooledTokens;
         swapStorage.tokenPrecisionMultipliers = precisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
-        swapStorage.initialA = _a.mul(AmplificationUtilsV2.A_PRECISION);
-        swapStorage.futureA = _a.mul(AmplificationUtilsV2.A_PRECISION);
+        swapStorage.initialA = _a.mul(AmplificationUtilsV3.A_PRECISION);
+        swapStorage.futureA = _a.mul(AmplificationUtilsV3.A_PRECISION);
         // TODO-POSTV2: why are these commented out? Remove them if unneeded
         // swapStorage.initialATime = 0;
         // swapStorage.futureATime = 0;
         swapStorage.swapFee = _fee;
         swapStorage.adminFee = _adminFee;
+        
+        // new in V3 - initialize lpCap at 100 LP Tokens
+        swapStorage.lpCap = 100e18;
 
         return address(lpToken);
     }
@@ -269,6 +274,7 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         return index;
     }
 
+    // TODO: is this even needed? Remove it if unneeded
     /**
      * @notice Return timestamp of last deposit of given address
      * @return timestamp of the last deposit made by the given address
@@ -545,7 +551,8 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /*** ADMIN FUNCTIONS ***/
-
+    
+    // TODO: can we remove this as well?
     /**
      * @notice Updates the user withdraw fee. This function can only be called by
      * the pool token. Should be used to update the withdraw fee on transfer of pool tokens.
@@ -572,8 +579,8 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     function updateRewardsTwoAccounts(address _account1, address _account2) 
         external
     {
-        LPRewardsV2(lpRewardsAddress).updateAllRewards(_account1);
-        LPRewardsV2(lpRewardsAddress).updateAllRewards(_account2);
+        LPRewardsV3(lpRewardsAddress).updateAllRewards(_account1);
+        LPRewardsV3(lpRewardsAddress).updateAllRewards(_account2);
     }
 
     /**
@@ -624,5 +631,13 @@ contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function stopRampA() external onlyOwner {
         swapStorage.stopRampA();
+    }
+
+    /**
+     * @notice adjust the cap on LPTokens which can exist in the system 
+     * @param newCap The new cap for LPTokens
+     */
+    function setLPCap(uint256 newCap) external onlyOwner {
+        swapStorage.setLPCap(newCap);
     }
 }

@@ -2,11 +2,11 @@
 
 pragma solidity 0.6.12;
 
-import "./contracts-v3_4/access/Ownable.sol";
-import "./contracts-v3_4/proxy/Clones.sol";
-import "./interfaces/ISwapFlashLoanV1.sol";
+import "../contracts-v3_4/access/Ownable.sol";
+import "../contracts-v3_4/proxy/Clones.sol";
+import "../interfaces/ISwapFlashLoanV1.sol";
 
-contract SwapDeployerV2 is Ownable {
+contract SwapDeployerV1 is Ownable {
     event NewSwapPool(
         address indexed deployer,
         address swapAddress,
