@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.12;
 
-import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
+import "../contracts-v3_4/token/ERC20/SafeERC20.sol";
 import "./SwapUtilsV2.sol";
 
 /**

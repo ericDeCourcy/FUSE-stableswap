@@ -2,9 +2,9 @@
 
 pragma solidity 0.6.12;
 
-import "./contracts-upgradeable-v3_4/token/ERC20/ERC20BurnableUpgradeable.sol";
-import "./contracts-upgradeable-v3_4/access/OwnableUpgradeable.sol";
-import "./interfaces/ISwapV3.sol";
+import "../contracts-upgradeable-v3_4/token/ERC20/ERC20BurnableUpgradeable.sol";
+import "../contracts-upgradeable-v3_4/access/OwnableUpgradeable.sol";
+import "../interfaces/ISwapV1.sol";
 
 /**
  * @title Liquidity Provider Token
@@ -12,7 +12,7 @@ import "./interfaces/ISwapV3.sol";
  * It is used to represent user's shares when providing liquidity to swap contracts.
  * @dev Only Swap contracts should initialize and own LPToken contracts.
  */
-contract LPTokenV3 is ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract LPTokenV1 is ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
     /**
@@ -27,7 +27,7 @@ contract LPTokenV3 is ERC20BurnableUpgradeable, OwnableUpgradeable {
         initializer
         returns (bool)
     {
-        __Context_init_unchained(); 
+        __Context_init_unchained();
         __ERC20_init_unchained(name, symbol);
         __Ownable_init_unchained();
         return true;
@@ -56,8 +56,6 @@ contract LPTokenV3 is ERC20BurnableUpgradeable, OwnableUpgradeable {
     ) internal virtual override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
         require(to != address(this), "LPToken: cannot send to itself");
-        ISwapV3(owner()).updateUserWithdrawFee(to, amount);
-        ISwapV3(owner()).updateRewardsTwoAccounts(to, from);    // this updates the rewards balances for both involved parties
+        ISwapV1(owner()).updateUserWithdrawFee(to, amount);
     }
-
 }

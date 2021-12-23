@@ -2,8 +2,8 @@
 
 pragma solidity 0.6.12;
 
-import "./SwapV2.sol";
-import "./interfaces/IFlashLoanReceiver.sol";
+import "./SwapV3.sol";
+import "../interfaces/IFlashLoanReceiver.sol";
 
 /**
  * @title Swap - A StableSwap implementation in solidity.
@@ -22,7 +22,7 @@ import "./interfaces/IFlashLoanReceiver.sol";
  * @dev Most of the logic is stored as a library `SwapUtils` for the sake of reducing contract's
  * deployment size.
  */
-contract SwapFlashLoanV2 is SwapV2 {
+contract SwapFlashLoanV3 is SwapV3 {
     // Total fee that is charged on all flashloans in BPS. Borrowers must repay the amount plus the flash loan fee.
     // This fee is split between the protocol and the pool.
     uint256 public flashLoanFeeBPS;
@@ -72,7 +72,7 @@ contract SwapFlashLoanV2 is SwapV2 {
         flashLoanFeeBPS = 8; // 8 bps
         protocolFeeShareBPS = 0; // 0 bps
 
-        return SwapV2.initialize(
+        return SwapV3.initialize(
             _pooledTokens,
             decimals,
             lpTokenName,

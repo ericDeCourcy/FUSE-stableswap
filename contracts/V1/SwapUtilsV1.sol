@@ -2,11 +2,11 @@
 
 pragma solidity 0.6.12;
 
-import "./contracts-v3_4/math/SafeMath.sol";
-import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
+import "../contracts-v3_4/math/SafeMath.sol";
+import "../contracts-v3_4/token/ERC20/SafeERC20.sol";
 import "./AmplificationUtilsV1.sol";
 import "./LPTokenV1.sol";
-import "./MathUtils.sol";
+import "../MathUtils.sol";
 
 /**
  * @title SwapUtils library

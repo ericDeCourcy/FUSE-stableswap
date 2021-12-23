@@ -3,12 +3,13 @@
 pragma solidity 0.6.12;
 
 //import "./contracts-v3_4/math/SafeMath.sol"; //removed since already present in SafeERC20.sol
-import "./contracts-v3_4/token/ERC20/SafeERC20.sol";
-import "./contracts-v3_4/proxy/Clones.sol";
-import "./contracts-upgradeable-v3_4/utils/ReentrancyGuardUpgradeable.sol";
-import "./OwnerPausableUpgradeable.sol";
-import "./SwapUtilsV1.sol";
-import "./AmplificationUtilsV1.sol";
+import "../contracts-v3_4/token/ERC20/SafeERC20.sol";
+import "../contracts-v3_4/proxy/Clones.sol";
+import "../contracts-upgradeable-v3_4/utils/ReentrancyGuardUpgradeable.sol";
+import "../OwnerPausableUpgradeable.sol";
+import "./SwapUtilsV2.sol";
+import "./AmplificationUtilsV2.sol";
+import "./LPRewardsV2.sol";
 
 /**ext:sol
  * @title Swap - A StableSwap implementation in solidity.
@@ -27,19 +28,26 @@ import "./AmplificationUtilsV1.sol";
  * @dev Most of the logic is stored as a library `SwapUtils` for the sake of reducing contract's
  * deployment size.
  */
-contract SwapV1 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
+
+ // Only difference between V1 and V2 is that V2 incorporates rewards staking.
+ //     - V2 deploys a rewards contract from which users can claim rewards
+ //     - V2 hooks into said rewards contract every time an LP token balance changes
+contract SwapV2 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    using SwapUtilsV1 for SwapUtilsV1.Swap;
-    using AmplificationUtilsV1 for SwapUtilsV1.Swap;
+    using SwapUtilsV2 for SwapUtilsV2.Swap;
+    using AmplificationUtilsV2 for SwapUtilsV2.Swap;
 
     // Struct storing data responsible for automatic market maker functionalities. In order to
     // access this data, this contract uses SwapUtils library. For more details, see SwapUtilsV1.sol
-    SwapUtilsV1.Swap public swapStorage;
+    SwapUtilsV2.Swap public swapStorage;
 
     // Maps token address to an index in the pool. Used to prevent duplicate tokens in the pool.
     // getTokenIndex function also relies on this mapping to retrieve token index.
     mapping(address => uint8) private tokenIndexes;
+
+    // address of LPRewards contract
+    address public lpRewardsAddress;
 
     /*** EVENTS ***/
 
@@ -104,7 +112,6 @@ contract SwapV1 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
      * StableSwap paper for details
      * @param _fee default swap fee to be initialized with
      * @param _adminFee default adminFee to be initialized with
-     * @param _withdrawFee default withdrawFee to be initialized with
      * @param lpTokenTargetAddress the address of an existing LPToken contract to use as a target
      */
     function initialize(
@@ -115,8 +122,9 @@ contract SwapV1 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _a,
         uint256 _fee,
         uint256 _adminFee,
-        uint256 _withdrawFee,
-        address lpTokenTargetAddress
+        //uint256 _withdrawFee, // TODO-POSTV2: remove all mentions of withdrawfee
+        address lpTokenTargetAddress,
+        address lpRewardsTargetAddress
     ) public virtual initializer returns(address newLpToken){
         __OwnerPausable_init();
         __ReentrancyGuard_init();
@@ -144,48 +152,58 @@ contract SwapV1 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
                 "The 0 address isn't an ERC-20"
             );
             require(
-                decimals[i] <= SwapUtilsV1.POOL_PRECISION_DECIMALS,
+                decimals[i] <= SwapUtilsV2.POOL_PRECISION_DECIMALS,
                 "Token decimals exceeds max"
             );
             precisionMultipliers[i] =
                 10 **
-                    uint256(SwapUtilsV1.POOL_PRECISION_DECIMALS).sub(
+                    uint256(SwapUtilsV2.POOL_PRECISION_DECIMALS).sub(
                         uint256(decimals[i])
                     );
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
 
         // Check _a, _fee, _adminFee, _withdrawFee parameters
-        require(_a < AmplificationUtilsV1.MAX_A, "_a exceeds maximum");
-        require(_fee < SwapUtilsV1.MAX_SWAP_FEE, "_fee exceeds maximum");
+        require(_a < AmplificationUtilsV2.MAX_A, "_a exceeds maximum");
+        require(_fee < SwapUtilsV2.MAX_SWAP_FEE, "_fee exceeds maximum");
         require(
-            _adminFee < SwapUtilsV1.MAX_ADMIN_FEE,
+            _adminFee < SwapUtilsV2.MAX_ADMIN_FEE,
             "_adminFee exceeds maximum"
-        );
-        require(
-            _withdrawFee < SwapUtilsV1.MAX_WITHDRAW_FEE,
-            "_withdrawFee exceeds maximum"
         );
 
         // Clone and initialize a LPToken contract
-        LPTokenV1 lpToken = LPTokenV1(Clones.clone(lpTokenTargetAddress));
+        LPTokenV2 lpToken = LPTokenV2(Clones.clone(lpTokenTargetAddress));
         require(
             lpToken.initialize(lpTokenName, lpTokenSymbol),
             "could not init lpToken clone"
         );
+
+        // Clone and initialize a LPRewards contract
+        LPRewardsV2 lpRewards = LPRewardsV2(Clones.clone(lpRewardsTargetAddress));
+        lpRewardsAddress = address(lpRewards);
+        require(
+            lpRewards.initialize(address(lpToken), tx.origin),  //Note: ownership is transferred to tx.origin - this will give ownership of the rewards contract to the sender who created this pool
+            "could not init lpRewards clone"
+        );
+        
+        lpRewards.transferOwnership(msg.sender);  
+         
+        
+
+
 
         // Initialize swapStorage struct
         swapStorage.lpToken = lpToken;
         swapStorage.pooledTokens = _pooledTokens;
         swapStorage.tokenPrecisionMultipliers = precisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
-        swapStorage.initialA = _a.mul(AmplificationUtilsV1.A_PRECISION);
-        swapStorage.futureA = _a.mul(AmplificationUtilsV1.A_PRECISION);
+        swapStorage.initialA = _a.mul(AmplificationUtilsV2.A_PRECISION);
+        swapStorage.futureA = _a.mul(AmplificationUtilsV2.A_PRECISION);
+        // TODO-POSTV2: why are these commented out? Remove them if unneeded
         // swapStorage.initialATime = 0;
         // swapStorage.futureATime = 0;
         swapStorage.swapFee = _fee;
         swapStorage.adminFee = _adminFee;
-        swapStorage.defaultWithdrawFee = _withdrawFee;
 
         return address(lpToken);
     }
@@ -544,6 +562,18 @@ contract SwapV1 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
             "Only callable by pool token"
         );
         swapStorage.updateUserWithdrawFee(recipient, transferAmount);
+    }
+
+    /*
+    * @notice Updates the reward contract's accounting for two accounts.
+    * @dev Typically called by the LPToken contract with both accounts being the sender and reciever of any transfer.
+    * @dev Mints and burns also count as "transfers"
+    */
+    function updateRewardsTwoAccounts(address _account1, address _account2) 
+        external
+    {
+        LPRewardsV2(lpRewardsAddress).updateAllRewards(_account1);
+        LPRewardsV2(lpRewardsAddress).updateAllRewards(_account2);
     }
 
     /**
