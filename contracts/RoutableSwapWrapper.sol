@@ -83,6 +83,8 @@ contract RoutableSwapWrapper {
      * 105% increase apparent ---> 100% + 5% ---> increase the 5% part by 10%, so 5.5%
      * increase input to (100 * (100 + 5.5)%) = 105.5 and try again
      */
+    
+    /**
     function getAmountIn(
         address tokenIn,
         address tokenOut,
@@ -110,10 +112,13 @@ contract RoutableSwapWrapper {
             if(diff > 0) // if amountOut is higher than the amountOutCalculated
             {
                 // newAmountIn = (((diff * 1.1) + amountOutCalculated) / amountOutCalculated) * lastAmountIn;
+                int256 scaledDiff = diff * 11e17 / 1e18;
+                uint256 scaledDiffFraction = 
+
             }
             else if(diff < 0) // shouldn't need an "if" here
             {
-                
+                // 
             }
 
 
@@ -125,5 +130,6 @@ contract RoutableSwapWrapper {
 
         }
     }
+    */
 
 }
