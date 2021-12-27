@@ -98,4 +98,8 @@ interface ISwapV3 {
     function updateRewardsTwoAccounts(address account1, address account2) external;
 
     function setLPCap(uint256 newCap) external;
+
+    function pause() external;
+
+    function unpause() external;
 }
