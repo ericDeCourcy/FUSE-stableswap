@@ -102,4 +102,8 @@ interface ISwapV3 {
     function pause() external;
 
     function unpause() external;
+
+    function setAdminFee(uint256 newAdminFee) external;
+
+    function setSwapFee(uint256 newSwapFee) external; 
 }
