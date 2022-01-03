@@ -52,13 +52,17 @@ Withdrawing from the pool will exchange LP tokens for the pool's underlying asse
 
 **The LP cap** is a safety measure for limiting the risk of a pool. The LP cap prevents minting new LP tokens once the total supply hits the LP cap. This can be used to safely meter the growth of the pool, and limit financial losses in the unlikely event of a security incident. The LP cap can be unlimited - once it is set to `2^256 - 1` (the maximum value of a `uint` in solidity), there is effectively no LP cap, since LP token total supply cannot increase above this amount anyway due to limitations of the smart contract environment.
 
+**Fees** There are two types of fees - there is the swap fee, and the admin fee. The swap fee is charged automatically on swaps. The admin fee is a percentage of the swap fee which goes to the admins. **When swapping, you will pay 0.05% per swap. Admins will recieve 10% of this, or 0.005% per swap** The remaining 0.045% will go towards LP token holders.
+
 ### Using Fuse Stable Swap
 The interface can be found at [ericdecourcy.github.io](https://ericdecourcy.github.io/).
 
 #### Current Pool
 This dropdown menu allows you to select which pool to interact with.
 - The **USD1 Pool** swaps between DAI <> USDC <> USDT.
-- The **USD2 Pool** swaps between DAI <> fUSD <> USDT. 
+- The **USD3 Pool** swaps between fUSD <> oneFUSE <> BUSD <> USDT. 
+
+Note: the **USD2 Pool** has been shut down.
 
 #### Deposit
 To deposit in a pool, click the "Deposit" tab. Input the amounts of each token you would like to deposit, and click the button below. You may need to send multiple "approve" transactions before being able to deposit. By depositing, you'll get LP tokens and accrue interest and rewards.
@@ -75,15 +79,6 @@ There are different kinds of withdrawal:
 
 #### Rewards
 Rewards are automatically accrued for liquidity providers. Currently there are no rewards; they can be set up by the pool admins. When rewards are set up, you can click the button in this tap to claim your rewards.
-
-### Available pools
-
-Currently deployed pools:
-- **USD1 Pool** is a pool between DAI, USDC, and USDT
-- **USD2 Pool** is a pool between DAI, fUSD, and USDT
-
-Planned pools:
-- **USD3 Pool** is a _planned_ pool, which _will contain_ BUSD, oneFUSE, and fUSD
 
 ### Rewards
 
