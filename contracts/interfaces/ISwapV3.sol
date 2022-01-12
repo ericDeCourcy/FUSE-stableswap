@@ -106,4 +106,6 @@ interface ISwapV3 {
     function setAdminFee(uint256 newAdminFee) external;
 
     function setSwapFee(uint256 newSwapFee) external; 
+
+    function transferOwnership(address newOwner) external;
 }
