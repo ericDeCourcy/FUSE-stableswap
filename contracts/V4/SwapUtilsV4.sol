@@ -591,6 +591,29 @@ library SwapUtilsV4 {
         dy = dy.sub(dyFee).div(multipliers[tokenIndexTo]);  //TODO: note that dy is div'd by multipliers, but dyFee is NOT - make sure this lines up with math where this is called
     }
 
+    // TODO natspec here
+    function calculateSwapExactOut(
+        Swap storage self,
+        uint8 tokenIndexFrom,
+        uint8 tokenIndexTo, 
+        uint256 dy
+    ) external view returns (uint256 dx) {
+        // calculate what dy would be with fee - this way we can match regular swap by calculating fee on output
+        // UserOutput = Total * (100% - Fee)
+        // Total = UserOutput / (100% - Fee)
+        uint256 dyWithFee = dy
+            .mul(FEE_DENOMINATOR)
+            .div(FEE_DENOMINATOR - self.swapFee);   //no need for safeMath because we can be sure swapFee is lower than FEE_DENOMINATOR from it's setter
+        uint256 dyFee = dyWithFee - dy;
+
+        // calculate dx
+        uint256[] memory balances = self.balances;
+        uint256 dx = _calculateSwapExactOut(self, tokenIndexFrom, tokenIndexTo, dyWithFee, balances);   //pass in dyWithFee because we subtract the fee from output token, and we're computing input to arrive at output
+
+        return dx;
+    }
+
+
 
     /**
      * @return dx The number of tokens in to return dy tokens out
@@ -603,7 +626,6 @@ library SwapUtilsV4 {
         uint256[] memory balances
     ) internal view returns (uint256 dx) { 
 
-        // TODO: fill this out
         uint256[] memory multipliers = self.tokenPrecisionMultipliers;
         uint256[] memory xp = _xp(balances, multipliers);
         require(
@@ -619,8 +641,8 @@ library SwapUtilsV4 {
                                                                                 // second index is the index of the token balance we want to know (x)
 
         dx = x.sub(xp[tokenIndexFrom]).sub(1);    // we sub 1 to handle accounting error
-                                                    // x will be higher than it's original balance
-        // fees are subtracted out of the output, so we don't care here
+                                                    // x will be higher than it's original balance, so we subtract original balance to get amt needed in
+        // fees are already accounted for when we pass in dy, so we don't need to double-count fees on the input
     }
 
     /**

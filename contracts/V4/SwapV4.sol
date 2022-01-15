@@ -331,6 +331,15 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         return swapStorage.calculateSwap(tokenIndexFrom, tokenIndexTo, dx);
     }
 
+    //TODO natpsec here
+    function calculateSwapExactOut(
+        uint8 tokenIndexFrom,
+        uint8 tokenIndexTo,
+        uint256 dy
+    ) external view virtual returns (uint256) {
+        return swapStorage.calculateSwapExactOut(tokenIndexFrom, tokenIndexTo, dy);
+    }
+
     /**
      * @notice A simple method to calculate prices from deposits or
      * withdrawals, excluding fees but including slippage. This is
