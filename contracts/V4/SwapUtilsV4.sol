@@ -148,18 +148,7 @@ library SwapUtilsV4 {
 
     /*** VIEW & PURE FUNCTIONS ***/
 
-    /**
-     * @notice Retrieves the timestamp of last deposit made by the given address
-     * @param self Swap struct to read from
-     * @return timestamp of last deposit
-     */
-    function getDepositTimestamp(Swap storage self, address user)
-        external
-        view
-        returns (uint256)
-    {
-        return self.depositTimestamp[user];
-    }
+   
 
     function _getAPrecise(Swap storage self) internal view returns (uint256) {
         return AmplificationUtilsV4._getAPrecise(self);
@@ -217,12 +206,6 @@ library SwapUtilsV4 {
                 .sub(newY)
                 .div(self.tokenPrecisionMultipliers[tokenIndex])
                 .sub(dy);
-
-        dy = dy
-            .mul(
-            FEE_DENOMINATOR.sub(_calculateCurrentWithdrawFee(self, account))
-        )
-            .div(FEE_DENOMINATOR);
 
         return (dy, dySwapFee);
     }
@@ -690,53 +673,12 @@ library SwapUtilsV4 {
     ) internal view returns (uint256[] memory) {
         require(amount <= totalSupply, "Cannot exceed total supply");
 
-        uint256 feeAdjustedAmount =
-            amount
-                .mul(
-                FEE_DENOMINATOR.sub(_calculateCurrentWithdrawFee(self, account))
-            )
-                .div(FEE_DENOMINATOR);
-
         uint256[] memory amounts = new uint256[](balances.length);
 
         for (uint256 i = 0; i < balances.length; i++) {
-            amounts[i] = balances[i].mul(feeAdjustedAmount).div(totalSupply);
+            amounts[i] = balances[i].mul(amount).div(totalSupply);
         }
         return amounts;
-    }
-
-    /**
-     * @notice Calculate the fee that is applied when the given user withdraws.
-     * Withdraw fee decays linearly over WITHDRAW_FEE_DECAY_TIME.
-     * @param user address you want to calculate withdraw fee of
-     * @return current withdraw fee of the user
-     */
-    function calculateCurrentWithdrawFee(Swap storage self, address user)
-        external
-        view
-        returns (uint256)
-    {
-        return _calculateCurrentWithdrawFee(self, user);
-    }
-
-    function _calculateCurrentWithdrawFee(Swap storage self, address user)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 endTime =
-            self.depositTimestamp[user].add(WITHDRAW_FEE_DECAY_TIME);
-        if (endTime > block.timestamp) {
-            uint256 timeLeftover = endTime.sub(block.timestamp);
-            return
-                self
-                    .defaultWithdrawFee
-                    .mul(self.withdrawFeeMultiplier[user])
-                    .mul(timeLeftover)
-                    .div(WITHDRAW_FEE_DECAY_TIME)
-                    .div(FEE_DENOMINATOR);
-        }
-        return 0;
     }
 
     /**
@@ -785,11 +727,7 @@ library SwapUtilsV4 {
             return d1.sub(d0).mul(totalSupply).div(d0);
         } else {
             return
-                d0.sub(d1).mul(totalSupply).div(d0).mul(FEE_DENOMINATOR).div(
-                    FEE_DENOMINATOR.sub(
-                        _calculateCurrentWithdrawFee(self, account)
-                    )
-                );
+                d0.sub(d1).mul(totalSupply).div(d0);
         }
     }
 
@@ -1061,44 +999,6 @@ library SwapUtilsV4 {
     }
 
     /**
-     * @notice Update the withdraw fee for `user`. If the user is currently
-     * not providing liquidity in the pool, sets to default value. If not, recalculate
-     * the starting withdraw fee based on the last deposit's time & amount relative
-     * to the new deposit.
-     *
-     * @param self Swap struct to read from and write to
-     * @param user address of the user depositing tokens
-     * @param toMint amount of pool tokens to be minted
-     */
-    function updateUserWithdrawFee(
-        Swap storage self,
-        address user,
-        uint256 toMint
-    ) public {
-        // If token is transferred to address 0 (or burned), don't update the fee.
-        if (user == address(0)) {
-            return;
-        }
-        if (self.defaultWithdrawFee == 0) {
-            // If current fee is set to 0%, set multiplier to FEE_DENOMINATOR
-            self.withdrawFeeMultiplier[user] = FEE_DENOMINATOR;
-        } else {
-            // Otherwise, calculate appropriate discount based on last deposit amount
-            uint256 currentFee = _calculateCurrentWithdrawFee(self, user);
-            uint256 currentBalance = self.lpToken.balanceOf(user);
-
-            // ((currentBalance * currentFee) + (toMint * defaultWithdrawFee)) * FEE_DENOMINATOR /
-            // ((toMint + currentBalance) * defaultWithdrawFee)
-            self.withdrawFeeMultiplier[user] = currentBalance
-                .mul(currentFee)
-                .add(toMint.mul(self.defaultWithdrawFee))
-                .mul(FEE_DENOMINATOR)
-                .div(toMint.add(currentBalance).mul(self.defaultWithdrawFee));
-        }
-        self.depositTimestamp[user] = block.timestamp;
-    }
-
-    /**
      * @notice Burn LP tokens to remove liquidity from the pool.
      * @dev Liquidity can always be removed, even when the pool is paused.
      * @param self Swap struct to read from and write to
@@ -1263,9 +1163,7 @@ library SwapUtilsV4 {
         }
         uint256 tokenAmount = v.d0.sub(v.d2).mul(v.totalSupply).div(v.d0);
         require(tokenAmount != 0, "Burnt amount cannot be zero");
-        tokenAmount = tokenAmount.add(1).mul(FEE_DENOMINATOR).div(
-            FEE_DENOMINATOR.sub(_calculateCurrentWithdrawFee(self, msg.sender))
-        );
+        tokenAmount = tokenAmount.add(1);
 
         require(tokenAmount <= maxBurnAmount, "tokenAmount > maxBurnAmount");
 

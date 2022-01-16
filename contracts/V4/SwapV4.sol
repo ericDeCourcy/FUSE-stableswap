@@ -273,20 +273,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         return index;
     }
 
-    // TODO: is this even needed? Remove it if unneeded
-    // Lets hold onto it for now, checkpointing may use it - jan 15 2022 - Eric
-    /**
-     * @notice Return timestamp of last deposit of given address
-     * @return timestamp of the last deposit made by the given address
-     */
-    function getDepositTimestamp(address user)
-        external
-        view
-        virtual
-        returns (uint256)
-    {
-        return swapStorage.getDepositTimestamp(user);
-    }
 
     /**
      * @notice Return current balance of the pooled token at given index
@@ -402,24 +388,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
                 tokenAmount,
                 tokenIndex
             );
-    }
-
-    /**
-     * @notice Calculate the fee that is applied when the given user withdraws. The withdraw fee
-     * decays linearly over period of 4 weeks. For example, depositing and withdrawing right away
-     * will charge you the full amount of withdraw fee. But withdrawing after 4 weeks will charge you
-     * no additional fees.
-     * @dev returned value should be divided by FEE_DENOMINATOR to convert to correct decimals
-     * @param user address you want to calculate withdraw fee of
-     * @return current withdraw fee of the user
-     */
-    function calculateCurrentWithdrawFee(address user)
-        external
-        view
-        virtual
-        returns (uint256)
-    {
-        return swapStorage.calculateCurrentWithdrawFee(user);
     }
 
     /**
@@ -594,25 +562,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
 
     /*** ADMIN FUNCTIONS ***/
     
-    // TODO: can we remove this as well?
-    /**
-     * @notice Updates the user withdraw fee. This function can only be called by
-     * the pool token. Should be used to update the withdraw fee on transfer of pool tokens.
-     * Transferring your pool token will reset the 4 weeks period. If the recipient is already
-     * holding some pool tokens, the withdraw fee will be discounted in respective amounts.
-     * @param recipient address of the recipient of pool token
-     * @param transferAmount amount of pool token to transfer
-     */
-    function updateUserWithdrawFee(address recipient, uint256 transferAmount)
-        external
-    {
-        require(
-            msg.sender == address(swapStorage.lpToken),
-            "Only callable by pool token"
-        );
-        swapStorage.updateUserWithdrawFee(recipient, transferAmount);
-    }
-
     /*
     * @notice Updates the reward contract's accounting for two accounts.
     * @dev Typically called by the LPToken contract with both accounts being the sender and reciever of any transfer.
