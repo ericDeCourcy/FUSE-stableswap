@@ -647,10 +647,13 @@ library SwapUtilsV4 {
             getY(_getAPrecise(self), tokenIndexTo, tokenIndexFrom, y, xp);    // we can use getY like in _calculateSwap, but we must swap "to" and "from" indices
                                                                                 // this is cuz first index is the index where balance was changed,
                                                                                 // second index is the index of the token balance we want to know (x)
-
-        dx = x.sub(xp[tokenIndexFrom]).add(1);    // we add 1 to handle accounting error - make user pay slightly more lol sorrrry
-                                                    // x will be higher than it's original balance, so we subtract original balance to get amt needed in
-        // fees are already accounted for when we pass in dy, so we don't need to double-count fees on the input
+     
+        dx = (x.sub(xp[tokenIndexFrom]))
+            .div(multipliers[tokenIndexFrom])
+            .add(1);    // we add 1 to handle accounting error - make user pay slightly more lol sorrrry
+                        // x will be higher than it's original balance, so we subtract original balance to get amt needed in
+                        // fees are already accounted for when we pass in dy, so we don't need to double-count fees on the input
+                        // we div by multipliers because getY returns a scaled balance
     }
 
     /**

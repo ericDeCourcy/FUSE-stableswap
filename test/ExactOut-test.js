@@ -69,7 +69,7 @@ describe("ExactOut-test", function () {
         // admin fee should be 10e9 because thats 10% - this means 10% of 0.1%... so admin gets 0.01% of each trade, LPs get 0.09% 
         const INIT_STANDALONE = await swapflashloan.initialize([fakeDAIContract.address, fakeUSDCContract.address, fakeUSDTContract.address], [18, 6, 6], "FSS-FAKE-DAI-USDC-USDT-V4", "LP-FAKE-USD-V4", 100, 50000000, 1000000000, lptoken.address, lprewards.address);
         
-        // get some fake tokens
+        // get some fake tokens - 1000 of each
         const DAI_MINT = await fakeDAIContract.mintPreset();
         const USDC_MINT = await fakeUSDCContract.mintPreset();
         const USDT_MINT = await fakeUSDTContract.mintPreset();
@@ -156,4 +156,63 @@ describe("ExactOut-test", function () {
     });
 
     // TODO: perform test asserting that actual token balances change by the amounts calculated
+    it("Large exactOut swaps work as predicted", async function () {
+        
+        const swapOutput = "50000000000000000000"; // 50 DAI
+
+        let swapInputGivenOut = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+
+        const maxDx = "1000000000"; // 1000 USDC
+        const deadline = "4797998105"; // jan 16 2122
+
+        let calculatedInput = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+        await swapflashloan.swapExactOut(1,0,swapOutput, maxDx, deadline);
+
+        // expect that balance of USDC is 900 - swapInputGivenOut
+        let USDCBalance = await fakeUSDCContract.balanceOf(owner.address);
+        
+        let USDCSpent = 900000000 - parseInt(USDCBalance._hex, 16);
+
+        expect(parseInt(swapInputGivenOut._hex,16)).to.equal(USDCSpent);
+    });
+
+    it("Medium exactOut swaps work as predicted", async function () {
+
+        const swapOutput = "5000000000000000000"; // 5 DAI
+
+        let swapInputGivenOut = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+
+        const maxDx = "1000000000"; // 1000 USDC
+        const deadline = "4797998105"; // jan 16 2122
+
+        let calculatedInput = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+        await swapflashloan.swapExactOut(1,0,swapOutput, maxDx, deadline);
+
+        // expect that balance of USDC is 900 - swapInputGivenOut
+        let USDCBalance = await fakeUSDCContract.balanceOf(owner.address);
+        
+        let USDCSpent = 900000000 - parseInt(USDCBalance._hex, 16);
+
+        expect(parseInt(swapInputGivenOut._hex,16)).to.equal(USDCSpent);
+    });
+
+    it("Small exactOut swaps work as predicted", async function () {
+        
+        const swapOutput = "100000000000000000"; // 0.1 DAI
+
+        let swapInputGivenOut = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+
+        const maxDx = "1000000000"; // 1000 USDC
+        const deadline = "4797998105"; // jan 16 2122
+
+        let calculatedInput = await swapflashloan.calculateSwapExactOut(1,0,swapOutput);
+        await swapflashloan.swapExactOut(1,0,swapOutput, maxDx, deadline);
+
+        // expect that balance of USDC is 900 - swapInputGivenOut
+        let USDCBalance = await fakeUSDCContract.balanceOf(owner.address);
+        
+        let USDCSpent = 900000000 - parseInt(USDCBalance._hex, 16);
+
+        expect(parseInt(swapInputGivenOut._hex,16)).to.equal(USDCSpent);
+    });
 });
