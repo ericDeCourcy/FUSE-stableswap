@@ -1,6 +1,3 @@
-// TODO: make sure that rewards will accrue correctly for an account that is inactive for the entirety of a rewards distibution.
-    // for example, someone deposits and never again touches their account. Then, a reward cycle starts then ends
-
 pragma solidity 0.6.12;
 
 import "../contracts-v3_4/math/Math.sol";
@@ -57,7 +54,7 @@ contract LPRewardsV4 is OwnableUpgradeable{
     }
 
     // @notice Updates all reward token accruals for a given account
-    // @dev This should be called by the SwapV3 contract whenever LPToken balance changes occur
+    // @dev This should be called by the SwapV4 contract whenever LPToken balance changes occur
     function updateAllRewards(address _account) external {
         for(uint x = 0; x < numRewardTokens; x++ )
         {
@@ -67,11 +64,7 @@ contract LPRewardsV4 is OwnableUpgradeable{
 
     function _updateReward(address _account, address _rewardToken) public {
         rewards[_rewardToken].rewardPerTokenStored = rewardPerToken(_rewardToken);
-        rewards[_rewardToken].lastUpdateTime = lastTimeRewardApplicable(_rewardToken); //TODO: what if this token has never been added? Will these setters be ok?
-
-        // TODO-POSTV2: will this shortcut be safe? 
-        // if account != 0, and userRewardPerTokenPaid == rewardPerToken then return early
-            // avoids calling `earned` and avoids setting two storage slots
+        rewards[_rewardToken].lastUpdateTime = lastTimeRewardApplicable(_rewardToken); 
 
         if (_account != address(0)) {
             userRewardPerTokenEarned[_account][_rewardToken] = earned(_account, _rewardToken); 
@@ -195,7 +188,9 @@ contract LPRewardsV4 is OwnableUpgradeable{
         onlyOwner
         // we don't need to call update reward because this will not affect any active rewards
     {
-        require(_duration > 0, "_duration must be greater than 0");     //TODO-POSTV2: consider if there are cases where duration==0 might be useful
+        require(_duration > 0, "_duration must be greater than 0");        //TODO-POSTV2: consider if there are cases where duration==0 might be useful
+                                                                            // also consider effect a 0 will have on the math
+                                                                            // may be useful for tokens which grow over time
         newRewardDuration = _duration;
 
         emit DefaultDurationChanged(_duration);

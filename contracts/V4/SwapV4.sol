@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// TODO: change all instances of V3 to V4
 // TODO: remove withdrawal fee logic
 pragma solidity 0.6.12;
 
@@ -33,7 +32,6 @@ import "./LPRewardsV4.sol";
 // Only difference between V1 and V2 is that V2 incorporates rewards staking.
 //     - V2 deploys a rewards contract from which users can claim rewards
 //     - V2 hooks into said rewards contract every time an LP token balance changes
-// TODO: remove this abovE?
 //
 // V3 differs from V2 in that it implements a "cap" for the number of LP tokens in circulation which can be adjusted by the pool owner
 // 
@@ -46,7 +44,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     using AmplificationUtilsV4 for SwapUtilsV4.Swap;
 
     // Struct storing data responsible for automatic market maker functionalities. In order to
-    // access this data, this contract uses SwapUtils library. For more details, see SwapUtilsV3.sol
+    // access this data, this contract uses SwapUtils library. For more details, see SwapUtilsV4.sol
     SwapUtilsV4.Swap public swapStorage;
 
     // Maps token address to an index in the pool. Used to prevent duplicate tokens in the pool.
@@ -205,9 +203,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         swapStorage.balances = new uint256[](_pooledTokens.length);
         swapStorage.initialA = _a.mul(AmplificationUtilsV4.A_PRECISION);
         swapStorage.futureA = _a.mul(AmplificationUtilsV4.A_PRECISION);
-        // TODO-POSTV2: why are these commented out? Remove them if unneeded
-        // swapStorage.initialATime = 0;
-        // swapStorage.futureATime = 0;
         swapStorage.swapFee = _fee;
         swapStorage.adminFee = _adminFee;
         
@@ -279,6 +274,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // TODO: is this even needed? Remove it if unneeded
+    // Lets hold onto it for now, checkpointing may use it - jan 15 2022 - Eric
     /**
      * @notice Return timestamp of last deposit of given address
      * @return timestamp of the last deposit made by the given address
@@ -331,7 +327,13 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         return swapStorage.calculateSwap(tokenIndexFrom, tokenIndexTo, dx);
     }
 
-    //TODO natpsec here
+    /**
+     * @notice Calculates how much you have to transfer in to get dy tokens out
+     * @param tokenIndexFrom Index of token user will send in for swap
+     * @param tokenIndexTo Index of token user will recieve
+     * @param dy Amount of token "to" user desires
+     * @return The amount of tokenIndexFrom user will need to send in
+     */
     function calculateSwapExactOut(
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
@@ -443,6 +445,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
      * @param dx the amount of tokens the user wants to swap from
      * @param minDy the min amount the user would like to receive, or revert.
      * @param deadline latest timestamp to accept this transaction
+     * @return amount of token user received on swap
      */
     function swap(
         uint8 tokenIndexFrom,
@@ -459,6 +462,32 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         returns (uint256)
     {
         return swapStorage.swap(tokenIndexFrom, tokenIndexTo, dx, minDy);
+    }
+
+    /**
+     * @notice Conducts swap to get a specified amount out
+     * @param tokenIndexFrom Index of the token the user sends in for swap
+     * @param tokenIndexTo Index of the token the user recieves from swap
+     * @param dy Amount of token "to" user wants
+     * @param maxDx Maximum amount of token "from" user is willing to pay
+     * @param deadline latest timestamp to accept this transaction
+     * @return dx The number of tokens paid in
+     */
+    function swapExactOut(
+        uint8 tokenIndexFrom, 
+        uint8 tokenIndexTo,
+        uint256 dy,
+        uint256 maxDx, 
+        uint256 deadline
+    )
+        external
+        virtual
+        nonReentrant
+        whenNotPaused
+        deadlineCheck(deadline)
+        returns (uint256)
+    {
+        return swapStorage.swapExactOut(tokenIndexFrom, tokenIndexTo, dy, maxDx);
     }
 
     /**

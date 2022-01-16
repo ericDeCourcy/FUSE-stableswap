@@ -144,6 +144,7 @@ library SwapUtilsV4 {
     // Time that it should take for the withdraw fee to fully decay to 0
     uint256 public constant WITHDRAW_FEE_DECAY_TIME = 0; // TODO-POSTV2: this was originally set to 4 weeks, figure out if we want to keep it as 0
                                                          // currently this is 0 for testing
+                                                         // TODO: get rid of all withdrawal fee logic
 
     /*** VIEW & PURE FUNCTIONS ***/
 
@@ -588,10 +589,17 @@ library SwapUtilsV4 {
             getY(_getAPrecise(self), tokenIndexFrom, tokenIndexTo, x, xp);
         dy = xp[tokenIndexTo].sub(y).sub(1);
         dyFee = dy.mul(self.swapFee).div(FEE_DENOMINATOR);
-        dy = dy.sub(dyFee).div(multipliers[tokenIndexTo]);  //TODO: note that dy is div'd by multipliers, but dyFee is NOT - make sure this lines up with math where this is called
+        dy = dy.sub(dyFee).div(multipliers[tokenIndexTo]); 
     }
 
-    // TODO natspec here
+    /**
+     * @notice Calculates how many tokens will need to be sent in to recieve specified dy tokens out
+     * @param self Swap struct to read from
+     * @param tokenIndexFrom Index of token user will send in
+     * @param tokenIndexTo Index of token user will recieve after swap
+     * @param dy The number of tokens user wants to recieve
+     * @return dx The number of tokens the user will need to send in, This includes the fee 
+     */
     function calculateSwapExactOut(
         Swap storage self,
         uint8 tokenIndexFrom,
@@ -640,7 +648,7 @@ library SwapUtilsV4 {
                                                                                 // this is cuz first index is the index where balance was changed,
                                                                                 // second index is the index of the token balance we want to know (x)
 
-        dx = x.sub(xp[tokenIndexFrom]).sub(1);    // we sub 1 to handle accounting error
+        dx = x.sub(xp[tokenIndexFrom]).add(1);    // we add 1 to handle accounting error - make user pay slightly more lol sorrrry
                                                     // x will be higher than it's original balance, so we subtract original balance to get amt needed in
         // fees are already accounted for when we pass in dy, so we don't need to double-count fees on the input
     }
@@ -875,7 +883,15 @@ library SwapUtilsV4 {
         return dy;
     }
 
-    // TODO: natspec here
+    /**
+     * @notice Conducts a swap which transfers up to maxDx in to trade for dy of token out
+     * @param self Swap struct to read from
+     * @param tokenIndexFrom Index of token user will send in for swap
+     * @param tokenIndexTo Index of token user will recieve from swap
+     * @param dy Number of tokens (indexTo) user wants to recieve
+     * @param maxDx Maximum num of tokens (indexFrom) user is willing to pay
+     * @return dx The number of tokens to pay in
+     */
     function swapExactOut( 
         Swap storage self,
         uint8 tokenIndexFrom,
@@ -883,8 +899,6 @@ library SwapUtilsV4 {
         uint256 dy,
         uint256 maxDx
     ) external returns (uint256) {
-
-        // TODO: build this function out
 
         // calculate what dy would be with fee - this way we can match regular swap by calculating fee on output
         // UserOutput = Total * (100% - Fee)
@@ -983,18 +997,7 @@ library SwapUtilsV4 {
 
             // Transfer tokens first to see if a fee was charged on transfer
             if (amounts[i] != 0) {
-                /*uint256 beforeBalance =
-                    pooledTokens[i].balanceOf(address(this));
-                pooledTokens[i].safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    amounts[i]
-                );
-
-                // Update the amounts[] with actual transfer amount
-                amounts[i] = pooledTokens[i].balanceOf(address(this)).sub(
-                    beforeBalance
-                );*/ //TODO-POSTV2: This has been changed to a simple transfer, assuming tokens don't charge fees. change it back later
+                // This has been changed to a simple transfer, (rather than safeTransfer) assuming tokens don't charge fees. Check git history for more
                 pooledTokens[i].transferFrom(msg.sender, address(this), amounts[i]);
             }
 

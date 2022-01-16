@@ -2,7 +2,7 @@
 
 async function main() {
 
-  const timeout = 5000; //TODO: change back to 25k for fusenut deploy
+  const timeout = 25000; // can set to 5 for local testing
 
   const owner = await ethers.getSigners();
 

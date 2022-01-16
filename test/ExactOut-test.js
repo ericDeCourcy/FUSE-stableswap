@@ -3,7 +3,6 @@ const { ethers } = require("hardhat");
 
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-// TODO: change all V3 to V4
 
 describe("ExactOut-test", function () {
     this.enableTimeouts(false); //TODO do we want this? Why?
@@ -45,15 +44,15 @@ describe("ExactOut-test", function () {
         const AmplificationUtils = await ethers.getContractFactory("AmplificationUtilsV4");
         const amplificationUtils = await AmplificationUtils.deploy();          
     
-        //deploy SwapFlashLoanV3
+        //deploy SwapFlashLoanV4
         const SwapFlashLoan = await ethers.getContractFactory("SwapFlashLoanV4", { libraries: { AmplificationUtilsV4: amplificationUtils.address, SwapUtilsV4: swaputils.address }, });
         swapflashloan = await SwapFlashLoan.deploy();
                 
-        // deploy LPTokenV3
+        // deploy LPTokenV4
         const LPToken = await ethers.getContractFactory("LPTokenV4");
         const lptoken = await LPToken.deploy();
                 
-        // deploy LPRewardsV3
+        // deploy LPRewardsV4
         const LPRewards = await ethers.getContractFactory("LPRewardsV4");
         const lprewards = await LPRewards.deploy();
     
@@ -91,7 +90,7 @@ describe("ExactOut-test", function () {
         rewardsContract = await LPRewards.attach(rewardToken);
     });
 
-    it("Check what outputs/inputs should be for both kinds of swap", async function () {
+    it("Check percent error between inputs when sending in DAI", async function () {
 
         const bigInput = "99000000000000000000";  //90 DAI
 
@@ -101,7 +100,7 @@ describe("ExactOut-test", function () {
         let swapInputGivenOut = await swapflashloan.calculateSwapExactOut(0,1,parseInt(swapOutputGivenIn));
         //console.log("inputGivenOutput: " + swapInputGivenOut);
 
-        let percentError = 100* parseInt(swapInputGivenOut) / parseInt(bigInput);
+        let percentError = 100* parseInt(swapInputGivenOut) / parseInt(bigInput);   //percent error is difference between what is paid for an output calculated via "exactOut", and the amount paid in which resulted in same output via regular swap function
         console.log("bigInput percentError: " + percentError);
 
         const mediumInput = "10000000000000000000"; // 10 DAI
@@ -112,6 +111,49 @@ describe("ExactOut-test", function () {
     
         percentError = 100* parseInt(swapInputGivenOut) / parseInt(mediumInput);
         console.log("mediumInput percentError: " + percentError);
+
+        const smallInput = "100000000000000000"; // 0.1 DAI
+
+        swapOutputGivenIn = await swapflashloan.calculateSwap(0,1,smallInput);
+
+        swapInputGivenOut = await swapflashloan.calculateSwap(0,1,swapOutputGivenIn);
+
+        percentError = 100* parseInt(swapInputGivenOut)/ parseInt(smallInput);
+        console.log("smallInput percentError: " + percentError);
     });
 
+    it("Check percent error between inputs sending in USDC for DAI", async function () {
+
+        /*
+        const bigInput = "99000000"; //99 USDC
+
+        let swapOutputGivenIn = await swapflashloan.calculateSwap(1,0,bigInput);
+
+        // TODO fix the issue here
+        let swapInputGivenOut = await swapflashloan.calculateSwapExactOut(1,0,parseInt(swapOutputGivenIn)); //parseInt seems to cause error
+        // try applying this answer from stackoverflow: https://stackoverflow.com/questions/10959255/javascript-bigint-js-how-to-divide-big-numbers
+
+        let percentError = 100 * parseInt(swapInputGivenOut) / parseInt(bigInput);
+        console.log("bigInput percentError: " + percentError);
+
+        const mediumInput = "10000000"; //99 USDC
+
+        swapOutputGivenIn = await swapflashloan.calculateSwap(1,0,mediumInput);
+
+        swapInputGivenOut = await swapflashloan.calculateSwapExactOut(1,0,parseInt(swapOutputGivenIn));
+
+        percentError = 100* parseInt(swapInputGivenOut)/ parseInt(mediumInput);
+        console.log("mediumInput percentError: " + percentError);
+
+        const smallInput = "100000"; // 0.1 USDC
+
+        swapOutputGivenIn = await swapflashloan.calculateSwap(1,0,smallInput);
+
+        swapInputGivenOut = await swapflashloan.calculateSwap(1,0,swapOutputGivenIn);
+
+        percentError = 100* parseInt(swapInputGivenOut)/ parseInt(smallInput);
+        console.log("smallInput percentError: " + percentError);*/
+    });
+
+    // TODO: perform test asserting that actual token balances change by the amounts calculated
 });
