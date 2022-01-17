@@ -28,6 +28,12 @@ interface ISwapV4 {
         uint256 dx
     ) external view returns (uint256);
 
+    function calculateSwapExactOut(
+        uint8 tokenIndexFrom,
+        uint8 tokenIndexTo,
+        uint256 dy
+    ) external view returns (uint256);
+
     function calculateTokenAmount(
         address account,
         uint256[] calldata amounts,
@@ -66,6 +72,14 @@ interface ISwapV4 {
         uint256 deadline
     ) external returns (uint256);
 
+    function swapExactOut(
+        uint8 tokenIndexFrom, 
+        uint8 tokenIndexTo,
+        uint256 dy,
+        uint256 maxDx, 
+        uint256 deadline
+    ) external returns (uint256);
+
     function addLiquidity(
         uint256[] calldata amounts,
         uint256 minToMint,
@@ -90,10 +104,6 @@ interface ISwapV4 {
         uint256 maxBurnAmount,
         uint256 deadline
     ) external returns (uint256);
-
-    // withdraw fee update function
-    function updateUserWithdrawFee(address recipient, uint256 transferAmount)
-        external;
 
     function updateRewardsTwoAccounts(address account1, address account2) external;
 

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// TODO: remove withdrawal fee logic
 pragma solidity 0.6.12;
 
 //import "./contracts-v3_4/math/SafeMath.sol"; //removed since already present in SafeERC20.sol
@@ -93,7 +92,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     );
     event NewAdminFee(uint256 newAdminFee);
     event NewSwapFee(uint256 newSwapFee);
-    event NewWithdrawFee(uint256 newWithdrawFee);
     event RampA(
         uint256 oldA,
         uint256 newA,
@@ -167,7 +165,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
 
-        // Check _a, _fee, _adminFee, _withdrawFee parameters
+        // Check _a, _fee, _adminFee parameters
         require(_a < AmplificationUtilsV4.MAX_A, "_a exceeds maximum");
         require(_fee < SwapUtilsV4.MAX_SWAP_FEE, "_fee exceeds maximum");
         require(
@@ -482,8 +480,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Burn LP tokens to remove liquidity from the pool. Withdraw fee that decays linearly
-     * over period of 4 weeks since last deposit will apply.
+     * @notice Burn LP tokens to remove liquidity from the pool. 
      * @dev Liquidity can always be removed, even when the pool is paused.
      * @param amount the amount of LP tokens to burn
      * @param minAmounts the minimum amounts of each token in the pool
@@ -506,8 +503,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     /**
-     * @notice Remove liquidity from the pool all in one token. Withdraw fee that decays linearly
-     * over period of 4 weeks since last deposit will apply.
+     * @notice Remove liquidity from the pool all in one token. 
      * @param tokenAmount the amount of the token you want to receive
      * @param tokenIndex the index of the token you want to receive
      * @param minAmount the minimum amount to withdraw, otherwise revert
@@ -537,8 +533,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
 
     /**
      * @notice Remove liquidity from the pool, weighted differently than the
-     * pool's current balances. Withdraw fee that decays linearly
-     * over period of 4 weeks since last deposit will apply.
+     * pool's current balances. 
      * @param amounts how much of each token to withdraw
      * @param maxBurnAmount the max LP token provider is willing to pay to
      * remove liquidity. Useful as a front-running mitigation.
@@ -595,15 +590,6 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function setSwapFee(uint256 newSwapFee) external onlyOwner {
         swapStorage.setSwapFee(newSwapFee);
-    }
-
-    /**
-     * @notice Update the withdraw fee. This fee decays linearly over 4 weeks since
-     * user's last deposit.
-     * @param newWithdrawFee new withdraw fee to be applied on future deposits
-     */
-    function setDefaultWithdrawFee(uint256 newWithdrawFee) external onlyOwner {
-        swapStorage.setDefaultWithdrawFee(newWithdrawFee);
     }
 
     /**

@@ -155,7 +155,6 @@ describe("ExactOut-test", function () {
         console.log("smallInput percentError: " + percentError);*/
     });
 
-    // TODO: perform test asserting that actual token balances change by the amounts calculated
     it("Large exactOut swaps work as predicted", async function () {
         
         const swapOutput = "50000000000000000000"; // 50 DAI

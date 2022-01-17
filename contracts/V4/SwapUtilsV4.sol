@@ -64,7 +64,6 @@ library SwapUtilsV4 {
     );
     event NewAdminFee(uint256 newAdminFee);
     event NewSwapFee(uint256 newSwapFee);
-    event NewWithdrawFee(uint256 newWithdrawFee);
     event NewLPCap(uint256 newCap);
 
     struct Swap {
@@ -78,7 +77,6 @@ library SwapUtilsV4 {
         // fee calculation
         uint256 swapFee;
         uint256 adminFee;
-        uint256 defaultWithdrawFee;
         uint256 lpCap;
         LPTokenV4 lpToken;
         // contract references for all tokens being pooled
@@ -90,8 +88,6 @@ library SwapUtilsV4 {
         // the pool balance of each token, in the token's precision
         // the contract's actual token balance might differ
         uint256[] balances;
-        mapping(address => uint256) depositTimestamp;
-        mapping(address => uint256) withdrawFeeMultiplier;
     }
 
     // Struct storing variables used in calculations in the
@@ -133,18 +129,8 @@ library SwapUtilsV4 {
     // users but only on the earnings of LPs
     uint256 public constant MAX_ADMIN_FEE = 10**10;
 
-    // Max withdrawFee is 1% of the value withdrawn
-    // Fee will be redistributed to the LPs in the pool, rewarding
-    // long term providers.
-    uint256 public constant MAX_WITHDRAW_FEE = 10**8;
-
     // Constant value used as max loop limit
     uint256 private constant MAX_LOOP_LIMIT = 256;
-
-    // Time that it should take for the withdraw fee to fully decay to 0
-    uint256 public constant WITHDRAW_FEE_DECAY_TIME = 0; // TODO-POSTV2: this was originally set to 4 weeks, figure out if we want to keep it as 0
-                                                         // currently this is 0 for testing
-                                                         // TODO: get rid of all withdrawal fee logic
 
     /*** VIEW & PURE FUNCTIONS ***/
 
@@ -1225,20 +1211,6 @@ library SwapUtilsV4 {
         self.swapFee = newSwapFee;
 
         emit NewSwapFee(newSwapFee);
-    }
-
-    /**
-     * @notice update the default withdraw fee. This also affects deposits made in the past as well.
-     * @param self Swap struct to update
-     * @param newWithdrawFee new withdraw fee to be applied
-     */
-    function setDefaultWithdrawFee(Swap storage self, uint256 newWithdrawFee)
-        external
-    {
-        require(newWithdrawFee <= MAX_WITHDRAW_FEE, "Fee is too high");
-        self.defaultWithdrawFee = newWithdrawFee;
-
-        emit NewWithdrawFee(newWithdrawFee);
     }
 
     /**
