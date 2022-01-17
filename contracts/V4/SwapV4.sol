@@ -99,6 +99,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 futureTime
     );
     event StopRampA(uint256 currentA, uint256 time);
+    event TokenDrain(address indexed token, uint256 amount, address recipient);
 
     /**
      * @notice Initializes this Swap contract with the given parameters.
@@ -636,5 +637,7 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
         }
 
         IERC20(token).transfer(dest, amount);
+
+        emit TokenDrain(token, amount, dest);
      }
 }
