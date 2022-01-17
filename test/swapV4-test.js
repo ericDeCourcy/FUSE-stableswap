@@ -312,5 +312,26 @@ describe("SwapV4-test", function () {
             // assert not equal
             expect(adminFeeBefore).to.not.equal(adminFeeAfter);
         });
+
+        it("Pool should not allow draining pooled tokens", async function () {
+            
+            expectRevert.unspecified(swapflashloan.drainTokens(fakeDAIContract.address, 100, owner.address));
+
+        });
+
+        it("Pool should allow draining non-pooled tokens", async function () {
+
+            let FakeDAIFactory = await ethers.getContractFactory("MockDAIMintable");
+            let otherTokenContract = await FakeDAIFactory.deploy();
+
+            // mint ourselves some tokens
+            await otherTokenContract.mintPreset();
+
+            // transfer them to the swap contract
+            await otherTokenContract.transfer(swapflashloan.address, 1000);
+
+            // get them back 
+            await swapflashloan.drainTokens(otherTokenContract.address, 1000, owner.address);
+        });
     });
 });

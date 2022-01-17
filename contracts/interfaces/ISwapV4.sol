@@ -118,4 +118,6 @@ interface ISwapV4 {
     function setSwapFee(uint256 newSwapFee) external; 
 
     function transferOwnership(address newOwner) external;
+
+    function drainTokens(address token, uint256 amount, address dest) external;
 }

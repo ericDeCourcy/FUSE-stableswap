@@ -617,4 +617,24 @@ contract SwapV4 is OwnerPausableUpgradeable, ReentrancyGuardUpgradeable {
     function setLPCap(uint256 newCap) external onlyOwner {
         swapStorage.setLPCap(newCap);
     }
+
+    /**
+     * @notice Withdraw tokens that are accidentally sent to this contract. Cannot withdraw pooled tokens
+     * @dev NOTE! Check tokens extensively before interacting with them
+     * Token contracts may behave maliciously. By sending a "transfer" call you hand over full
+     * control of execution to the token contract
+     * @param token Address of token to drain
+     * @param amount Amount of tokens to drain
+     * @param dest Address to send these tokens to
+     */
+     function drainTokens(address token, uint256 amount, address dest) external onlyOwner {
+         
+        // for all tokens in pool, check that token != pooledToken
+        for(uint i = 0; i < swapStorage.pooledTokens.length; i++)
+        {
+            require(token != address(swapStorage.pooledTokens[i]), "Cannot drain pooled tokens");
+        }
+
+        IERC20(token).transfer(dest, amount);
+     }
 }
