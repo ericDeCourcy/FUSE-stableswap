@@ -2,7 +2,7 @@
 
 async function main() {
 
-  const timeout = 25000; // can set to 5 for local testing
+  const timeout = 25000; // can set to 5000 for local testing
 
   const owner = await ethers.getSigners();
 
