@@ -66,5 +66,7 @@ contract RouteHandler{
             (tokenAIndex, tokenBIndex) = getTokensIndicesFromPool(pool, tokenPath[i-1], tokenPath[i]);
             SwapFlashLoanV3(pool).swap(tokenAIndex, tokenBIndex, expectedDys[i-1], expectedDys[i], deadline);
         }
+        IERC20 tokenB = IERC20(tokenPath[tokenPath.length - 1]);
+        tokenB.transfer(msg.sender, expectedDys[expectedDys.length - 1]);
     }
 }
