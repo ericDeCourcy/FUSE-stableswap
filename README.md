@@ -52,34 +52,33 @@ Withdrawing from the pool will exchange LP tokens for the pool's underlying asse
 
 **The LP cap** is a safety measure for limiting the risk of a pool. The LP cap prevents minting new LP tokens once the total supply hits the LP cap. This can be used to safely meter the growth of the pool, and limit financial losses in the unlikely event of a security incident. The LP cap can be unlimited - once it is set to `2^256 - 1` (the maximum value of a `uint` in solidity), there is effectively no LP cap, since LP token total supply cannot increase above this amount anyway due to limitations of the smart contract environment.
 
+**Fees** There are two types of fees - there is the swap fee, and the admin fee. The swap fee is charged automatically on swaps. The admin fee is a percentage of the swap fee which goes to the admins. **When swapping, you will pay 0.05% per swap. Admins will recieve 10% of this, or 0.005% per swap** The remaining 0.045% will go towards LP token holders.
+
 ### Using Fuse Stable Swap
 The interface can be found at [ericdecourcy.github.io](https://ericdecourcy.github.io/).
 
-Fuse Stable Swap currently (as of November 28 2021) has two pools. 
-- The **USD1 Pool** swaps between DAI <> USDC <> USDT. It is deployed on Fuse network at [`0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9`](https://explorer.fuse.io/address/0x3E192A2Eae22B3DB07a0039E10bCe29097E881B9/transactions).
-- The **USD2 Pool** swaps between DAI <> fUSD <> USDT. It is deployed on Fuse network at [`0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD`](https://explorer.fuse.io/address/0xECf95fFBa3e1Eb5f673606bC944fD093BB5D8EeD/transactions).
+#### Current Pool
+This dropdown menu allows you to select which pool to interact with.
+- The **USD1 Pool** swaps between DAI <> USDC <> USDT.
+- The **USD3 Pool** swaps between fUSD <> oneFUSE <> BUSD <> USDT. 
 
-To switch between pools, choose the pool you want from the dropdown menu labeled "Current Pool" at the top of the interface.
+Note: the **USD2 Pool** has been shut down.
 
-**Swaps** are conducted by picking the token to swap from, and the token to swap to. You'll need to approve the input token, which you will be prompted to do from the interface if you have not done so already. Swaps are highly efficient and net better prices than uniswap and its forks. Prices should be close to 1:1. These can be found in the `Swap` tab of the interface.
+#### Deposit
+To deposit in a pool, click the "Deposit" tab. Input the amounts of each token you would like to deposit, and click the button below. You may need to send multiple "approve" transactions before being able to deposit. By depositing, you'll get LP tokens and accrue interest and rewards.
 
-**Deposits** are conducted in the `Deposit` tab of the interface. You can deposit `0` or more of each token into the pool you have selected. If depositing any number other than `0` for a given token, you will need to approve each token before depositing, which you will be prompted to do from the interface if you have not done so already.
+#### Swaps
+To swap, click the swap tab. You can input which token you're passing in for a swap and which token you want to recieve. Input how many tokens you're sending in. The app will calculate how many tokens you'll get back out. Click the button to approve and swap tokens.
 
-**Withdrawals** are conducted from the `Withdraw` tab of the interface. To conduct any withdrawal, you will need to approve the pool's LP token before withdrawing if you have not done so already. Read about the different types of withdrawal below:
-- **Balanced withdrawals** can be selected by clicking on the `Balanced Withdrawal` subtab in the interface. This will withdraw tokens at an equal proportion to what is in the pool. So, if the pool contains 100 DAI and 10 USDC and 10 USDT, you will recieve tokens in a roughly 10:1:1 DAI:USDC:USDT ratio. 
-- **Single Token withdrawals** can be selected by clicking the `Single Token Withdrawal` subtab. This will withdraw in the form of only a single token. For both balanced withdrawals and Single Token withdrawals, you specify the number of LP tokens to exchange for your withdrawn tokens. 
-- **Imbalanced withdrawals** are selected by clicking `Imbalanced Withdrawal` in the interface. These withdrawals will attempt to withdraw your desired amounts of each token, but will only succeed if your LP token balance is enough.
 
-**Rewards** are automatically accrued for liquidity providers. Currently there are no rewards; they can be set up by the pool admins.
+#### Withdraw
+There are different kinds of withdrawal: 
+- **Balanced withdrawals** will withdraw tokens at an equal proportion to what is in the pool. So, if the pool contains 100 DAI and 10 USDC and 10 USDT, you will recieve tokens in a roughly 10:1:1 DAI:USDC:USDT ratio. 
+- **Single Token withdrawals** can be selected by clicking the `Single Token Withdrawal` subtab. This will withdraw in the form of only a single token. You'll specify how many LP tokens to burn. LP tokens should typically be worth about $1.
+- **Imbalanced withdrawals** are selected by clicking `Imbalanced Withdrawal` in the interface. These withdrawals will attempt to withdraw your desired amounts of each token, but will only succeed if your LP token balance is enough. Instead of inputting how many LP tokens to burn, you indicate how many tokens you'd like.
 
-### Available pools
-
-Currently deployed pools:
-- **USD1 Pool** is a pool between DAI, USDC, and USDT
-- **USD2 Pool** is a pool between DAI, fUSD, and USDT
-
-Planned pools:
-- **USD3 Pool** is a _planned_ pool, which _will contain_ BUSD, oneFUSE, and fUSD
+#### Rewards
+Rewards are automatically accrued for liquidity providers. Currently there are no rewards; they can be set up by the pool admins. When rewards are set up, you can click the button in this tap to claim your rewards.
 
 ### Rewards
 
